@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Expense Tracker Pro | Prasatek</title>
     <script src="https://cdn.tailwindcss.com"></script>
+<link rel="icon" type="image/png" href="favicon.png">
     
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -91,7 +92,7 @@
             </div>
         </div>
 
-        <div id="addAccountModal" class="absolute inset-0 bg-slate-900 bg-opacity-60 z-50 hidden flex-col items-center justify-center p-4 backdrop-blur-sm">
+        <div id="addAccountModal" class="absolute inset-0 bg-slate-900 bg-opacity-60 z-50 hidden opacity-0 flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-150 ease-in-out">
             <div class="bg-white rounded-[1.5rem] w-full max-w-sm p-7 shadow-2xl transform transition-all">
                 <h3 class="text-2xl font-extrabold text-slate-800 mb-1">Add New Account</h3>
                 <p class="text-sm text-gray-500 mb-6 font-medium">Create a new wallet or bank account.</p>
@@ -116,7 +117,7 @@
             </div>
         </div>
 
-        <div id="mainScreen" class="hidden flex-1 flex-col h-full bg-prasatek-light">
+        <div id="mainScreen" class="hidden flex-1 flex-col h-full bg-prasatek-light transition-opacity duration-150 ease-in-out">
             
             <div class="bg-white px-6 pt-8 pb-6 rounded-b-[2.5rem] shadow-sm relative z-10">
                 <div class="flex justify-between items-center mb-6">
@@ -438,10 +439,18 @@
             modalError.classList.add('hidden');
             screens.accountModal.classList.remove('hidden');
             screens.accountModal.classList.add('flex');
+            
+            // Allow layout render, then fade in
+            setTimeout(() => screens.accountModal.classList.remove('opacity-0'), 10);
         });
         
         document.getElementById('closeAccModalBtn').addEventListener('click', () => {
-            screens.accountModal.classList.add('hidden');
+            // Fade out smoothly, then hide
+            screens.accountModal.classList.add('opacity-0');
+            setTimeout(() => {
+                screens.accountModal.classList.add('hidden');
+                screens.accountModal.classList.remove('flex');
+            }, 150);
         });
         
         document.getElementById('addAccountForm').addEventListener('submit', async (e) => {
@@ -463,7 +472,14 @@
                     });
 
                     document.getElementById('addAccountForm').reset();
-                    screens.accountModal.classList.add('hidden');
+                    
+                    // Close the modal cleanly
+                    screens.accountModal.classList.add('opacity-0');
+                    setTimeout(() => {
+                        screens.accountModal.classList.add('hidden');
+                        screens.accountModal.classList.remove('flex');
+                    }, 150);
+                    
                     fetchData(); 
                 } catch (error) {
                     modalError.textContent = "Error saving. Please check your Firebase Rules.";
