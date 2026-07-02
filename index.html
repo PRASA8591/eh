@@ -51,15 +51,11 @@
             </div>
 
             <div class="w-full text-center mb-6">
-                <h2 id="authTitle" class="text-xl font-bold text-slate-800">Welcome Back</h2>
-                <p id="authSubtitle" class="text-sm text-gray-500 mt-1">Sign in to manage your accounts</p>
+                <h2 class="text-xl font-bold text-slate-800">Welcome Back</h2>
+                <p class="text-sm text-gray-500 mt-1">Sign in to manage your accounts</p>
             </div>
             
             <form id="authForm" class="w-full space-y-4">
-                <div id="nameFieldContainer" class="hidden">
-                    <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Full Name</label>
-                    <input type="text" id="nameInput" placeholder="John Doe" class="w-full bg-prasatek-light text-slate-800 text-sm font-semibold rounded-xl px-4 py-3 border-none focus:ring-2 focus:ring-prasatek-primary outline-none transition">
-                </div>
                 <div>
                     <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Username or Email</label>
                     <input type="email" id="emailInput" required placeholder="admin@prasatek.site" class="w-full bg-prasatek-light text-slate-800 text-sm font-semibold rounded-xl px-4 py-3 border-none focus:ring-2 focus:ring-prasatek-primary outline-none transition">
@@ -88,16 +84,6 @@
                 Continue with Google
             </button>
 
-            <button type="button" id="biometricLoginBtn" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl py-3.5 transition flex justify-center items-center gap-2 shadow-md">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"></path></svg>
-                <span>Biometric Login</span>
-            </button>
-
-            <div class="mt-8 text-sm text-gray-500 font-medium">
-                <span id="authToggleText">Don't have an account?</span> 
-                <button id="toggleAuthBtn" class="text-prasatek-primary font-bold hover:underline focus:outline-none">Register now</button>
-            </div>
-
             <div class="mt-auto pt-8 flex gap-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest justify-center">
                 <button onclick="showScreen('privacyScreen')" class="hover:text-prasatek-primary transition">Privacy</button>
                 <span>|</span>
@@ -107,33 +93,33 @@
             </div>
         </div>
 
-        <!-- ================= STATIC PAGES (PRIVACY/TERMS/CONTACT) ================= -->
+        <!-- ================= STATIC PAGES (PRIVACY/TERMS/CONTACT) - FROZEN / NO SCROLL ================= -->
         
         <!-- Privacy Screen -->
-        <div id="privacyScreen" class="hidden flex-1 w-full flex-col p-6 overflow-y-auto hide-scroll transition-opacity duration-150 bg-white">
+        <div id="privacyScreen" class="hidden flex-1 w-full flex-col p-6 overflow-hidden transition-opacity duration-150 bg-white">
             <button onclick="goBack()" class="text-xs font-bold text-gray-500 hover:text-slate-800 mb-6 flex items-center gap-1 w-fit">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg> Back
             </button>
             <h2 class="text-2xl font-extrabold text-slate-900 mb-4">Privacy Policy</h2>
-            <div class="text-sm text-slate-600 space-y-4 pb-10">
+            <div class="text-sm text-slate-600 space-y-4">
                 <p>Welcome to ExpenseTracker Pro. Your privacy is critically important to us. This policy outlines how we handle your data.</p>
                 <h3 class="font-bold text-slate-800">1. Data Collection</h3>
                 <p>We collect information you provide directly to us when you create an account, update your profile, or use our financial tracking tools.</p>
                 <h3 class="font-bold text-slate-800">2. Data Usage</h3>
                 <p>Your financial data is stored securely using Firebase. It is used exclusively to provide you with the functionality of the application, including visualizations and CSV exports.</p>
                 <h3 class="font-bold text-slate-800">3. Security</h3>
-                <p>We implement biometric login features and secure database rules to protect your personal information.</p>
+                <p>We implement strict database rules to protect your personal information.</p>
                 <p class="text-xs text-gray-400 mt-8">Last updated: July 2026</p>
             </div>
         </div>
 
         <!-- Terms Screen -->
-        <div id="termsScreen" class="hidden flex-1 w-full flex-col p-6 overflow-y-auto hide-scroll transition-opacity duration-150 bg-white">
+        <div id="termsScreen" class="hidden flex-1 w-full flex-col p-6 overflow-hidden transition-opacity duration-150 bg-white">
             <button onclick="goBack()" class="text-xs font-bold text-gray-500 hover:text-slate-800 mb-6 flex items-center gap-1 w-fit">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg> Back
             </button>
             <h2 class="text-2xl font-extrabold text-slate-900 mb-4">Terms of Service</h2>
-            <div class="text-sm text-slate-600 space-y-4 pb-10">
+            <div class="text-sm text-slate-600 space-y-4">
                 <p>By accessing or using ExpenseTracker Pro, you agree to be bound by these Terms of Service.</p>
                 <h3 class="font-bold text-slate-800">1. Use License</h3>
                 <p>Permission is granted to temporarily use the ExpenseTracker Pro software for personal, non-commercial financial tracking.</p>
@@ -145,7 +131,7 @@
         </div>
 
         <!-- Contact Screen -->
-        <div id="contactScreen" class="hidden flex-1 w-full flex-col p-6 overflow-y-auto hide-scroll transition-opacity duration-150 bg-white">
+        <div id="contactScreen" class="hidden flex-1 w-full flex-col p-6 overflow-hidden transition-opacity duration-150 bg-white">
             <button onclick="goBack()" class="text-xs font-bold text-gray-500 hover:text-slate-800 mb-6 flex items-center gap-1 w-fit">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg> Back
             </button>
@@ -177,7 +163,7 @@
             </form>
         </div>
 
-        <!-- ================= MAIN DASHBOARD SCREEN ================= -->
+        <!-- ================= MAIN DASHBOARD SCREEN (SCROLLABLE) ================= -->
         <div id="mainScreen" class="hidden flex-1 w-full flex-col bg-prasatek-light transition-opacity duration-150 ease-in-out overflow-y-auto hide-scroll">
             
             <div class="bg-white px-6 pt-8 pb-6 rounded-b-[2.5rem] shadow-sm relative z-10">
@@ -198,7 +184,7 @@
                 </div>
             </div>
 
-            <!-- Visual Analytics Chart (Updated to Accounts) -->
+            <!-- Visual Analytics Chart -->
             <div class="px-6 pt-6 pb-2">
                 <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 flex flex-col items-center">
                     <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide w-full text-left mb-2">Account Balances</h3>
@@ -208,6 +194,7 @@
                 </div>
             </div>
 
+            <!-- Accounts Horizontal List -->
             <div class="pt-4 pb-2 px-6">
                 <div class="flex justify-between items-end mb-4">
                     <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide">My Accounts</h3>
@@ -272,19 +259,37 @@
                 </div>
             </div>
 
-            <div class="px-6 flex-1 flex flex-col min-h-[250px] mb-8">
-                <div class="flex justify-between items-center mb-4 mt-2">
-                    <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide">History</h3>
-                    
-                    <div class="flex gap-2">
+            <!-- Advanced Filters & History Section -->
+            <div class="px-6 flex-1 flex flex-col mb-8">
+                <div class="flex flex-col gap-3 mb-4 mt-2 bg-white p-4 rounded-3xl border border-gray-100 shadow-sm">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide">History</h3>
                         <button id="exportCsvBtn" class="bg-prasatek-dark text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-slate-700 transition flex items-center gap-1 shadow-sm">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                             CSV
                         </button>
-                        <input type="month" id="monthFilter" class="bg-white px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-prasatek-primary shadow-sm">
+                    </div>
+                    
+                    <!-- New Advanced Grid Filters -->
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1">Month</label>
+                            <input type="month" id="filterMonth" class="w-full bg-prasatek-light px-2 py-2 border-none rounded-lg text-[11px] font-bold text-slate-700 outline-none focus:ring-1 focus:ring-prasatek-primary">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1">Date</label>
+                            <input type="date" id="filterDate" class="w-full bg-prasatek-light px-2 py-2 border-none rounded-lg text-[11px] font-bold text-slate-700 outline-none focus:ring-1 focus:ring-prasatek-primary">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1">Account</label>
+                            <select id="filterAccount" class="w-full bg-prasatek-light px-2 py-2 border-none rounded-lg text-[11px] font-bold text-slate-700 outline-none focus:ring-1 focus:ring-prasatek-primary appearance-none">
+                                <option value="">All Accounts</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
-                <ul id="transactionList" class="space-y-3 overflow-y-auto pb-6 hide-scroll flex-1"></ul>
+
+                <ul id="transactionList" class="space-y-3 pb-6"></ul>
                 
                 <!-- Dashboard Footer Links -->
                 <div class="mt-6 pt-4 border-t border-gray-200 flex justify-center gap-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest pb-4">
@@ -297,7 +302,7 @@
             </div>
         </div>
 
-        <!-- ================= ADD ACCOUNT MODAL (Separated from Router) ================= -->
+        <!-- ================= ADD ACCOUNT MODAL ================= -->
         <div id="addAccountModal" class="absolute inset-0 bg-slate-900 bg-opacity-60 z-50 hidden opacity-0 flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-150 ease-in-out">
             <div class="bg-white rounded-[1.5rem] w-full max-w-sm p-7 shadow-2xl transform transition-all">
                 <h3 class="text-2xl font-extrabold text-slate-800 mb-1">Add New Account</h3>
@@ -320,6 +325,21 @@
                         <button type="submit" id="saveAccBtn" class="w-1/2 bg-prasatek-dark hover-prasatek-dark text-white font-bold py-3 rounded-xl transition">Saving...</button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- ================= CUSTOM CONFIRMATION MODAL ================= -->
+        <div id="confirmModal" class="absolute inset-0 bg-slate-900 bg-opacity-60 z-[60] hidden opacity-0 flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-150 ease-in-out">
+            <div class="bg-white rounded-[1.5rem] w-full max-w-sm p-6 shadow-2xl transform transition-all text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                    <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                <h3 id="confirmTitle" class="text-lg font-extrabold text-slate-900 mb-1">Are you sure?</h3>
+                <p id="confirmMessage" class="text-sm text-gray-500 mb-6 font-medium">This action cannot be undone.</p>
+                <div class="flex gap-3">
+                    <button type="button" id="cancelConfirmBtn" class="w-1/2 bg-[#e2e8f0] hover:bg-gray-300 text-slate-700 font-bold py-3 rounded-xl transition">Cancel</button>
+                    <button type="button" id="acceptConfirmBtn" class="w-1/2 bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl transition shadow-md shadow-red-500/20">Delete</button>
+                </div>
             </div>
         </div>
     </div>
@@ -346,11 +366,10 @@
         let currentUser = null;
         let userAccounts = [];
         let allTransactions = [];
-        let isLoginMode = true;
         let expenseChartInstance = null; 
+        let confirmActionCallback = null;
 
         // DOM Elements
-        // NOTE: addAccountModal is excluded here to protect its layout classes
         const screens = {
             auth: document.getElementById('authScreen'),
             main: document.getElementById('mainScreen'),
@@ -360,53 +379,45 @@
         };
         const loadingScreen = document.getElementById('loadingScreen');
         
-        const authTitle = document.getElementById('authTitle');
-        const authSubtitle = document.getElementById('authSubtitle');
-        const nameFieldContainer = document.getElementById('nameFieldContainer');
-        const nameInput = document.getElementById('nameInput');
         const emailInput = document.getElementById('emailInput');
         const passwordInput = document.getElementById('passwordInput');
         const authSubmitBtn = document.getElementById('authSubmitBtn');
         const authError = document.getElementById('authError');
-        const toggleAuthBtn = document.getElementById('toggleAuthBtn');
-        const authToggleText = document.getElementById('authToggleText');
         
         const dateInput = document.getElementById('dateInput');
-        const monthFilter = document.getElementById('monthFilter');
         const txAccountSelect = document.getElementById('txAccountSelect');
         const submitTxBtn = document.getElementById('submitTxBtn');
 
+        // Filter Elements
+        const filterMonth = document.getElementById('filterMonth');
+        const filterDate = document.getElementById('filterDate');
+        const filterAccount = document.getElementById('filterAccount');
+
+        // Set Initial Date
         const today = new Date();
         dateInput.value = today.toISOString().split('T')[0];
-        monthFilter.value = today.toISOString().slice(0, 7);
+        filterMonth.value = today.toISOString().slice(0, 7);
 
         // ================= SPA SCREEN ROUTING =================
         function showScreen(target) {
-            // Hide loading if it was open
             loadingScreen.classList.add('hidden');
             loadingScreen.classList.remove('flex');
 
-            // Hide all standard pages
             Object.values(screens).forEach(s => {
                 s.classList.add('hidden', 'opacity-0');
                 s.classList.remove('flex');
             });
 
-            // If it's the loading screen specifically
             if (target === 'loading') {
                 loadingScreen.classList.remove('hidden');
                 loadingScreen.classList.add('flex');
                 return;
             }
 
-            // Show standard targets safely
             if(screens[target]) {
                 screens[target].classList.remove('hidden');
                 screens[target].classList.add('flex');
-                
-                // Force a reflow to ensure the transition plays nicely
                 void screens[target].offsetWidth; 
-                
                 screens[target].classList.remove('opacity-0'); 
             }
         }
@@ -419,44 +430,41 @@
             }
         }
 
-        // ================= AUTHENTICATION LOGIC =================
-        toggleAuthBtn.addEventListener('click', () => {
-            isLoginMode = !isLoginMode;
-            authError.classList.add('hidden');
-            if (isLoginMode) {
-                authTitle.textContent = "Welcome Back";
-                authSubtitle.textContent = "Sign in to manage your accounts";
-                authSubmitBtn.innerHTML = `<span>LOGIN</span>`;
-                nameFieldContainer.classList.add('hidden');
-                nameInput.removeAttribute('required');
-                authToggleText.textContent = "Don't have an account?";
-                toggleAuthBtn.textContent = "Register now";
-            } else {
-                authTitle.textContent = "Create Account";
-                authSubtitle.textContent = "Join ExpenseTracker Pro today";
-                authSubmitBtn.innerHTML = `<span>REGISTER</span>`;
-                nameFieldContainer.classList.remove('hidden');
-                nameInput.setAttribute('required', 'true');
-                authToggleText.textContent = "Already have an account?";
-                toggleAuthBtn.textContent = "Login here";
-            }
+        // ================= CUSTOM CONFIRMATION POPUP =================
+        const confirmModal = document.getElementById('confirmModal');
+        
+        function showConfirmPopup(title, message, callback) {
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = message;
+            confirmActionCallback = callback;
+            
+            confirmModal.classList.remove('hidden');
+            confirmModal.classList.add('flex');
+            setTimeout(() => confirmModal.classList.remove('opacity-0'), 10);
+        }
+
+        document.getElementById('cancelConfirmBtn').addEventListener('click', closeConfirmPopup);
+        document.getElementById('acceptConfirmBtn').addEventListener('click', () => {
+            if(confirmActionCallback) confirmActionCallback();
+            closeConfirmPopup();
         });
 
+        function closeConfirmPopup() {
+            confirmModal.classList.add('opacity-0');
+            setTimeout(() => { confirmModal.classList.add('hidden'); confirmModal.classList.remove('flex'); }, 150);
+            confirmActionCallback = null;
+        }
+
+        // ================= AUTHENTICATION LOGIC =================
         document.getElementById('authForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = emailInput.value.trim();
             const password = passwordInput.value;
-            const name = nameInput.value.trim();
             authError.classList.add('hidden');
             authSubmitBtn.disabled = true;
 
             try {
-                if (isLoginMode) {
-                    await auth.signInWithEmailAndPassword(email, password);
-                } else {
-                    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                    await userCredential.user.updateProfile({ displayName: name });
-                }
+                await auth.signInWithEmailAndPassword(email, password);
             } catch (error) {
                 authError.textContent = error.message;
                 authError.classList.remove('hidden');
@@ -470,26 +478,6 @@
                 authError.textContent = error.message;
                 authError.classList.remove('hidden');
             });
-        });
-
-        document.getElementById('biometricLoginBtn').addEventListener('click', async () => {
-            authError.classList.add('hidden');
-            if (!window.PublicKeyCredential) {
-                authError.textContent = "Biometrics not supported on this device/browser.";
-                authError.classList.remove('hidden');
-                return;
-            }
-            try {
-                const challenge = new Uint8Array(32); 
-                window.crypto.getRandomValues(challenge);
-                const credential = await navigator.credentials.get({
-                    publicKey: { challenge: challenge, timeout: 60000, userVerification: "required" }
-                });
-                if (credential) alert("Biometrics verified!");
-            } catch (err) {
-                authError.textContent = "Biometric authentication failed or was canceled.";
-                authError.classList.remove('hidden');
-            }
         });
 
         auth.onAuthStateChanged(user => {
@@ -539,8 +527,13 @@
             });
 
             const accountsListDiv = document.getElementById('accountsList');
+            
+            // Preserve Account Filter Selection
+            const currentFilterAcc = filterAccount.value;
+            
             txAccountSelect.innerHTML = ''; 
             accountsListDiv.innerHTML = ''; 
+            filterAccount.innerHTML = '<option value="">All Accounts</option>';
 
             let chartLabels = [];
             let chartData = [];
@@ -563,21 +556,37 @@
 
                     const balColor = currentBal < 0 ? 'text-red-500' : 'text-slate-800';
                     
+                    // Added Delete Button to Account Card
                     accountsListDiv.innerHTML += `
-                        <div class="min-w-[140px] snap-center bg-white border border-gray-100 p-4 rounded-2xl shadow-sm">
-                            <p class="text-[11px] font-extrabold text-gray-400 uppercase tracking-wider truncate">${acc.name}</p>
+                        <div class="min-w-[140px] snap-center bg-white border border-gray-100 p-4 rounded-2xl shadow-sm relative group">
+                            <button onclick="deleteAccount('${acc.id}')" class="absolute top-2 right-2 text-gray-300 hover:text-red-500 bg-gray-50 hover:bg-red-50 p-1.5 rounded-lg transition" title="Delete Account">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <p class="text-[11px] font-extrabold text-gray-400 uppercase tracking-wider truncate pr-6">${acc.name}</p>
                             <p class="text-xl font-extrabold ${balColor} mt-1 truncate">Rs ${currentBal.toFixed(2)}</p>
                         </div>
                     `;
                     txAccountSelect.innerHTML += `<option value="${acc.id}">${acc.name} (Bal: Rs ${currentBal.toFixed(2)})</option>`;
+                    filterAccount.innerHTML += `<option value="${acc.id}">${acc.name}</option>`;
                 });
             }
 
+            filterAccount.value = currentFilterAcc; // Restore filter
             document.getElementById('globalBalanceDisplay').textContent = `Rs ${globalTotal.toFixed(2)}`;
 
+            // Apply Advanced History Filters
             const listUI = document.getElementById('transactionList');
-            const selectedMonth = monthFilter.value;
-            const filteredTx = allTransactions.filter(tx => tx.month === selectedMonth);
+            const fMonth = filterMonth.value;
+            const fDate = filterDate.value;
+            const fAcc = filterAccount.value;
+
+            const filteredTx = allTransactions.filter(tx => {
+                let match = true;
+                if (fMonth && tx.month !== fMonth) match = false;
+                if (fDate && tx.date !== fDate) match = false;
+                if (fAcc && tx.accountId !== fAcc) match = false;
+                return match;
+            });
 
             listUI.innerHTML = '';
             if (filteredTx.length === 0) {
@@ -585,7 +594,7 @@
             } else {
                 filteredTx.forEach(tx => {
                     const accRef = userAccounts.find(a => a.id === tx.accountId);
-                    const accName = accRef ? accRef.name : 'Unknown';
+                    const accName = accRef ? accRef.name : 'Unknown Account';
                     const isIncome = tx.type === 'add';
                     const amountText = isIncome ? `+ Rs ${tx.amount.toFixed(2)}` : `- Rs ${tx.amount.toFixed(2)}`;
                     const colorClass = isIncome ? 'text-prasatek-primary' : 'text-red-500';
@@ -602,7 +611,7 @@
                             </div>
                             <div class="flex items-center gap-3">
                                 <span class="font-extrabold ${colorClass} text-sm whitespace-nowrap">${amountText}</span>
-                                <button onclick="deleteTx('${tx.id}')" class="text-gray-300 hover:text-red-500 bg-gray-50 hover:bg-red-50 p-2 rounded-lg transition" title="Delete">
+                                <button onclick="deleteTx('${tx.id}')" class="text-gray-300 hover:text-red-500 bg-gray-50 hover:bg-red-50 p-2 rounded-lg transition" title="Delete Transaction">
                                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
                                 </button>
                             </div>
@@ -615,7 +624,7 @@
             updateChart(chartLabels, chartData);
         }
 
-        // ================= CHART LOGIC (ACCOUNTS) =================
+        // ================= CHART LOGIC =================
         function updateChart(labels, data) {
             const ctx = document.getElementById('expenseChart');
             if (!ctx) return;
@@ -643,20 +652,42 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } }
-                    }
+                    plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } }
                 }
             });
         }
+
+        // ================= FILTER LISTENERS =================
+        filterMonth.addEventListener('change', () => {
+            filterDate.value = ''; // clear specific date if month is picked
+            renderDashboard();
+        });
+        
+        filterDate.addEventListener('change', () => {
+            if(filterDate.value) { filterMonth.value = ''; } // clear month if specific date is picked
+            renderDashboard();
+        });
+
+        filterAccount.addEventListener('change', renderDashboard);
 
         // ================= CSV EXPORT =================
         document.getElementById('exportCsvBtn').addEventListener('click', () => {
             if (allTransactions.length === 0) return alert("No data available to export.");
 
             let csvContent = "data:text/csv;charset=utf-8,Date,Month,Account,Type,Category,Description,Amount (Rs)\n";
-            const selectedMonth = monthFilter.value;
-            const filteredTx = allTransactions.filter(tx => tx.month === selectedMonth);
+            
+            const fMonth = filterMonth.value;
+            const fDate = filterDate.value;
+            const fAcc = filterAccount.value;
+
+            // Export ONLY what is currently filtered
+            const filteredTx = allTransactions.filter(tx => {
+                let match = true;
+                if (fMonth && tx.month !== fMonth) match = false;
+                if (fDate && tx.date !== fDate) match = false;
+                if (fAcc && tx.accountId !== fAcc) match = false;
+                return match;
+            });
 
             filteredTx.forEach(tx => {
                 const accRef = userAccounts.find(a => a.id === tx.accountId);
@@ -670,13 +701,13 @@
 
             const link = document.createElement("a");
             link.href = encodeURI(csvContent);
-            link.download = `Prasatek_Transactions_${selectedMonth}.csv`;
+            link.download = `Prasatek_Transactions_Export.csv`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         });
 
-        // ================= FORMS & MODALS =================
+        // ================= MODALS & FORMS =================
         const addAccModal = document.getElementById('addAccountModal');
         document.getElementById('openAccModalBtn').addEventListener('click', () => {
             document.getElementById('modalError').classList.add('hidden');
@@ -738,7 +769,11 @@
                     });
                     document.getElementById('descInput').value = '';
                     document.getElementById('amountInput').value = '';
-                    monthFilter.value = dateVal.slice(0, 7); 
+                    
+                    // Reset filters so the new entry is visible
+                    filterDate.value = '';
+                    filterMonth.value = dateVal.slice(0, 7); 
+                    
                     fetchData(); 
                 } finally {
                     submitTxBtn.disabled = false;
@@ -747,14 +782,20 @@
             }
         });
 
-        window.deleteTx = async (id) => {
-            if(confirm("Delete this transaction?")) {
+        // Delete Logic utilizing Custom Confirm Popup
+        window.deleteTx = (id) => {
+            showConfirmPopup("Delete Record", "Are you sure you want to permanently delete this transaction?", async () => {
                 await db.collection("transactions").doc(id).delete();
                 fetchData();
-            }
+            });
         };
 
-        monthFilter.addEventListener('change', renderDashboard);
+        window.deleteAccount = (id) => {
+            showConfirmPopup("Delete Account", "Are you sure? Existing transactions associated with this account will display as 'Unknown'.", async () => {
+                await db.collection("accounts").doc(id).delete();
+                fetchData();
+            });
+        };
 
         showScreen('loading');
     </script>
