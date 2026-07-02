@@ -7,12 +7,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="favicon.png">
     
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     
-    <!-- Chart.js for Advanced Analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
@@ -22,7 +20,6 @@
         .hover-prasatek-primary:hover { background-color: #09734a; }
         .text-prasatek-dark { color: #1e293b; }
         .bg-prasatek-dark { background-color: #1e293b; }
-        .hover-prasatek-dark:hover { background-color: #0f172a; }
         
         input:-webkit-autofill {
             -webkit-box-shadow: 0 0 0 30px #eef2f6 inset !important;
@@ -35,13 +32,11 @@
 
     <div class="w-full max-w-md bg-white shadow-2xl md:rounded-[2rem] overflow-hidden h-screen md:h-auto md:min-h-[750px] relative border border-gray-100 flex flex-col">
         
-        <!-- ================= LOADING SCREEN ================= -->
         <div id="loadingScreen" class="absolute inset-0 bg-white z-50 hidden flex-col items-center justify-center">
             <div class="w-10 h-10 border-4 border-prasatek-light border-t-prasatek-primary rounded-full animate-spin mb-4"></div>
-            <p class="text-sm font-bold text-gray-500 uppercase tracking-widest">Loading Workspace...</p>
+            <p class="text-sm font-bold text-gray-500 uppercase tracking-widest">Loading...</p>
         </div>
 
-        <!-- ================= AUTH SCREEN ================= -->
         <div id="authScreen" class="hidden flex-1 flex-col items-center justify-center p-8 overflow-y-auto hide-scroll w-full transition-opacity duration-150">
             
             <div class="text-center mb-6">
@@ -51,14 +46,22 @@
             </div>
 
             <div class="w-full text-center mb-6">
-                <h2 class="text-xl font-bold text-slate-800">Welcome Back</h2>
-                <p class="text-sm text-gray-500 mt-1">Sign in to manage your accounts</p>
+                <h2 id="authTitle" class="text-xl font-bold text-slate-800">Welcome Back</h2>
+                <p id="authSubtitle" class="text-sm text-gray-500 mt-1">Sign in to manage your accounts</p>
             </div>
             
             <form id="authForm" class="w-full space-y-4">
+                <div id="nameFieldContainer" class="hidden">
+                    <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Username</label>
+                    <input type="text" id="nameInput" placeholder="Display Name" class="w-full bg-prasatek-light text-slate-800 text-sm font-semibold rounded-xl px-4 py-3 border-none focus:ring-2 focus:ring-prasatek-primary outline-none transition">
+                </div>
+                <div id="mobileFieldContainer" class="hidden">
+                    <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Mobile Number</label>
+                    <input type="tel" id="mobileInput" placeholder="071XXXXXXX" class="w-full bg-prasatek-light text-slate-800 text-sm font-semibold rounded-xl px-4 py-3 border-none focus:ring-2 focus:ring-prasatek-primary outline-none transition">
+                </div>
                 <div>
-                    <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Username or Email</label>
-                    <input type="email" id="emailInput" required placeholder="admin@prasatek.site" class="w-full bg-prasatek-light text-slate-800 text-sm font-semibold rounded-xl px-4 py-3 border-none focus:ring-2 focus:ring-prasatek-primary outline-none transition">
+                    <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Email</label>
+                    <input type="email" id="emailInput" required placeholder="user@email.com" class="w-full bg-prasatek-light text-slate-800 text-sm font-semibold rounded-xl px-4 py-3 border-none focus:ring-2 focus:ring-prasatek-primary outline-none transition">
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Password</label>
@@ -66,8 +69,9 @@
                 </div>
                 
                 <p id="authError" class="text-red-500 text-xs text-center hidden font-medium"></p>
+                <p id="authSuccess" class="text-prasatek-primary text-xs text-center hidden font-medium"></p>
 
-                <button type="submit" id="authSubmitBtn" class="w-full bg-prasatek-primary hover-prasatek-primary text-white font-bold rounded-xl py-3.5 transition flex justify-center items-center gap-2 shadow-lg shadow-green-900/20 mt-2">
+                <button type="submit" id="authSubmitBtn" class="w-full bg-prasatek-primary hover:bg-[#09734a] text-white font-bold rounded-xl py-3.5 transition flex justify-center items-center gap-2 shadow-lg shadow-green-900/20 mt-2">
                     <span>LOGIN</span>
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                 </button>
@@ -84,6 +88,11 @@
                 Continue with Google
             </button>
 
+            <div class="mt-4 text-sm text-gray-500 font-medium">
+                <span id="authToggleText">Don't have an account?</span> 
+                <button id="toggleAuthBtn" class="text-prasatek-primary font-bold hover:underline focus:outline-none">Register now</button>
+            </div>
+
             <div class="mt-auto pt-8 flex gap-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest justify-center">
                 <button onclick="showScreen('privacyScreen')" class="hover:text-prasatek-primary transition">Privacy</button>
                 <span>|</span>
@@ -93,78 +102,71 @@
             </div>
         </div>
 
-        <!-- ================= STATIC PAGES (PRIVACY/TERMS/CONTACT) - FROZEN / NO SCROLL ================= -->
-        
-        <!-- Privacy Screen -->
-        <div id="privacyScreen" class="hidden flex-1 w-full flex-col p-6 overflow-hidden transition-opacity duration-150 bg-white">
-            <button onclick="goBack()" class="text-xs font-bold text-gray-500 hover:text-slate-800 mb-6 flex items-center gap-1 w-fit">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg> Back
-            </button>
-            <h2 class="text-2xl font-extrabold text-slate-900 mb-4">Privacy Policy</h2>
-            <div class="text-sm text-slate-600 space-y-4">
-                <p>Welcome to ExpenseTracker Pro. Your privacy is critically important to us. This policy outlines how we handle your data.</p>
-                <h3 class="font-bold text-slate-800">1. Data Collection</h3>
-                <p>We collect information you provide directly to us when you create an account, update your profile, or use our financial tracking tools.</p>
-                <h3 class="font-bold text-slate-800">2. Data Usage</h3>
-                <p>Your financial data is stored securely using Firebase. It is used exclusively to provide you with the functionality of the application, including visualizations and CSV exports.</p>
-                <h3 class="font-bold text-slate-800">3. Security</h3>
-                <p>We implement strict database rules to protect your personal information.</p>
-                <p class="text-xs text-gray-400 mt-8">Last updated: July 2026</p>
-            </div>
-        </div>
-
-        <!-- Terms Screen -->
-        <div id="termsScreen" class="hidden flex-1 w-full flex-col p-6 overflow-hidden transition-opacity duration-150 bg-white">
-            <button onclick="goBack()" class="text-xs font-bold text-gray-500 hover:text-slate-800 mb-6 flex items-center gap-1 w-fit">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg> Back
-            </button>
-            <h2 class="text-2xl font-extrabold text-slate-900 mb-4">Terms of Service</h2>
-            <div class="text-sm text-slate-600 space-y-4">
-                <p>By accessing or using ExpenseTracker Pro, you agree to be bound by these Terms of Service.</p>
-                <h3 class="font-bold text-slate-800">1. Use License</h3>
-                <p>Permission is granted to temporarily use the ExpenseTracker Pro software for personal, non-commercial financial tracking.</p>
-                <h3 class="font-bold text-slate-800">2. Disclaimer</h3>
-                <p>The materials within this application are provided on an 'as is' basis. Prasatek System Solutions makes no warranties, expressed or implied.</p>
-                <h3 class="font-bold text-slate-800">3. Currency</h3>
-                <p>All financial metrics are calculated and processed in Sri Lankan Rupees (Rs).</p>
-            </div>
-        </div>
-
-        <!-- Contact Screen -->
-        <div id="contactScreen" class="hidden flex-1 w-full flex-col p-6 overflow-hidden transition-opacity duration-150 bg-white">
-            <button onclick="goBack()" class="text-xs font-bold text-gray-500 hover:text-slate-800 mb-6 flex items-center gap-1 w-fit">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg> Back
-            </button>
-            <h2 class="text-2xl font-extrabold text-slate-900 mb-1">Contact Us</h2>
-            <p class="text-sm text-gray-500 mb-8">Get in touch with the development team.</p>
-            
-            <div class="bg-prasatek-light p-6 rounded-2xl mb-6 border border-gray-100">
-                <h3 class="font-extrabold text-slate-800 text-lg mb-4">Prasatek System Solutions</h3>
-                
-                <div class="flex items-center gap-3 mb-3 text-sm font-medium text-slate-700">
-                    <svg class="w-5 h-5 text-prasatek-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                    0719323239
-                </div>
-                
-                <div class="flex items-center gap-3 text-sm font-medium text-slate-700">
-                    <svg class="w-5 h-5 text-prasatek-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
-                    www.prasatek.site
-                </div>
-            </div>
-
-            <form class="space-y-4 pb-10">
-                <div>
-                    <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase">Message</label>
-                    <textarea rows="4" placeholder="How can we help?" class="w-full bg-prasatek-light text-slate-800 text-sm font-semibold rounded-xl px-4 py-3 border-none focus:ring-2 focus:ring-prasatek-primary outline-none transition"></textarea>
-                </div>
-                <button type="button" onclick="alert('Message feature coming soon!')" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl py-3.5 transition shadow-md">
-                    Send Message
+        <div id="privacyScreen" class="hidden flex-1 w-full flex-col bg-white h-full relative">
+            <div class="w-full p-6 pb-2 shrink-0 bg-white border-b border-gray-100 z-10">
+                <button onclick="goBack()" class="text-xs font-bold text-gray-500 hover:text-slate-800 flex items-center gap-1 w-fit">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg> Back
                 </button>
-            </form>
+                <h2 class="text-2xl font-extrabold text-slate-900 mt-4">Privacy Policy</h2>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 pt-4 hide-scroll">
+                <div class="text-sm text-slate-600 space-y-4 pb-10">
+                    <p>Welcome to ExpenseTracker Pro. Your privacy is critically important to us. This policy outlines how we handle your data.</p>
+                    <h3 class="font-bold text-slate-800">1. Data Collection</h3>
+                    <p>We collect information you provide directly to us when you create an account, update your profile, or use our financial tracking tools.</p>
+                    <h3 class="font-bold text-slate-800">2. Data Usage</h3>
+                    <p>Your financial data is stored securely using Firebase. It is used exclusively to provide you with the functionality of the application.</p>
+                    <h3 class="font-bold text-slate-800">3. Security</h3>
+                    <p>We implement strict database rules to protect your personal information.</p>
+                    <p class="text-xs text-gray-400 mt-8">Last updated: July 2026</p>
+                </div>
+            </div>
         </div>
 
-        <!-- ================= MAIN DASHBOARD SCREEN (SCROLLABLE) ================= -->
-        <div id="mainScreen" class="hidden flex-1 w-full flex-col bg-prasatek-light transition-opacity duration-150 ease-in-out overflow-y-auto hide-scroll">
+        <div id="termsScreen" class="hidden flex-1 w-full flex-col bg-white h-full relative">
+            <div class="w-full p-6 pb-2 shrink-0 bg-white border-b border-gray-100 z-10">
+                <button onclick="goBack()" class="text-xs font-bold text-gray-500 hover:text-slate-800 flex items-center gap-1 w-fit">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg> Back
+                </button>
+                <h2 class="text-2xl font-extrabold text-slate-900 mt-4">Terms of Service</h2>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 pt-4 hide-scroll">
+                <div class="text-sm text-slate-600 space-y-4 pb-10">
+                    <p>By accessing or using ExpenseTracker Pro, you agree to be bound by these Terms of Service.</p>
+                    <h3 class="font-bold text-slate-800">1. Use License</h3>
+                    <p>Permission is granted to temporarily use the software for personal, non-commercial tracking.</p>
+                    <h3 class="font-bold text-slate-800">2. Disclaimer</h3>
+                    <p>The materials are provided on an 'as is' basis. Prasatek System Solutions makes no warranties.</p>
+                    <h3 class="font-bold text-slate-800">3. Currency</h3>
+                    <p>All financial metrics are calculated and processed in Sri Lankan Rupees (Rs).</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="contactScreen" class="hidden flex-1 w-full flex-col bg-white h-full relative">
+            <div class="w-full p-6 pb-2 shrink-0 bg-white border-b border-gray-100 z-10">
+                <button onclick="goBack()" class="text-xs font-bold text-gray-500 hover:text-slate-800 flex items-center gap-1 w-fit">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg> Back
+                </button>
+                <h2 class="text-2xl font-extrabold text-slate-900 mt-4">Contact Us</h2>
+                <p class="text-sm text-gray-500 mt-1">Get in touch with the development team.</p>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 pt-4 hide-scroll">
+                <div class="bg-prasatek-light p-6 rounded-2xl mb-6 border border-gray-100">
+                    <h3 class="font-extrabold text-slate-800 text-lg mb-4">Prasatek System Solutions</h3>
+                    <div class="flex items-center gap-3 mb-3 text-sm font-medium text-slate-700">
+                        <svg class="w-5 h-5 text-prasatek-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                        0719323239
+                    </div>
+                    <div class="flex items-center gap-3 text-sm font-medium text-slate-700">
+                        <svg class="w-5 h-5 text-prasatek-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+                        www.prasatek.site
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="mainScreen" class="hidden flex-1 w-full flex-col bg-prasatek-light overflow-y-auto hide-scroll">
             
             <div class="bg-white px-6 pt-8 pb-6 rounded-b-[2.5rem] shadow-sm relative z-10">
                 <div class="flex justify-between items-center mb-6">
@@ -180,11 +182,10 @@
                 
                 <div class="text-center mt-2">
                     <h1 class="text-[10px] font-bold mb-1 text-slate-400 uppercase tracking-[0.15em]">Total Net Worth</h1>
-                    <h2 class="text-4xl font-extrabold tracking-tight text-slate-900" id="globalBalanceDisplay">Rs 0.00</h2>
+                    <h2 class="text-4xl font-extrabold tracking-tight text-slate-900" id="globalBalanceDisplay">RS 0.00</h2>
                 </div>
             </div>
 
-            <!-- Visual Analytics Chart -->
             <div class="px-6 pt-6 pb-2">
                 <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 flex flex-col items-center">
                     <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide w-full text-left mb-2">Account Balances</h3>
@@ -194,7 +195,6 @@
                 </div>
             </div>
 
-            <!-- Accounts Horizontal List -->
             <div class="pt-4 pb-2 px-6">
                 <div class="flex justify-between items-end mb-4">
                     <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide">My Accounts</h3>
@@ -247,19 +247,18 @@
                                 <input type="text" id="descInput" required placeholder="e.g., Server Bill" class="w-full bg-prasatek-light text-slate-800 text-sm font-bold rounded-xl px-4 py-3 border-none focus:ring-2 focus:ring-prasatek-primary outline-none">
                             </div>
                             <div class="w-2/5">
-                                <label class="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase">Amount (Rs)</label>
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase">Amount (RS)</label>
                                 <input type="number" id="amountInput" required min="0.01" step="0.01" placeholder="0.00" class="w-full bg-prasatek-light text-slate-800 text-sm font-bold rounded-xl px-3 py-3 border-none focus:ring-2 focus:ring-prasatek-primary outline-none">
                             </div>
                         </div>
 
-                        <button type="submit" id="submitTxBtn" class="w-full bg-prasatek-primary hover-prasatek-primary text-white font-extrabold rounded-xl py-3.5 transition shadow-lg shadow-green-900/20 mt-2">
+                        <button type="submit" id="submitTxBtn" class="w-full bg-prasatek-primary hover:bg-[#09734a] text-white font-extrabold rounded-xl py-3.5 transition shadow-lg shadow-green-900/20 mt-2">
                             MARK TRANSACTION
                         </button>
                     </form>
                 </div>
             </div>
 
-            <!-- Advanced Filters & History Section -->
             <div class="px-6 flex-1 flex flex-col mb-8">
                 <div class="flex flex-col gap-3 mb-4 mt-2 bg-white p-4 rounded-3xl border border-gray-100 shadow-sm">
                     <div class="flex justify-between items-center">
@@ -270,7 +269,6 @@
                         </button>
                     </div>
                     
-                    <!-- New Advanced Grid Filters -->
                     <div class="grid grid-cols-3 gap-2">
                         <div>
                             <label class="block text-[9px] font-bold text-gray-400 uppercase mb-1">Month</label>
@@ -291,7 +289,6 @@
 
                 <ul id="transactionList" class="space-y-3 pb-6"></ul>
                 
-                <!-- Dashboard Footer Links -->
                 <div class="mt-6 pt-4 border-t border-gray-200 flex justify-center gap-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest pb-4">
                     <button onclick="showScreen('privacyScreen')" class="hover:text-prasatek-primary transition">Privacy</button>
                     <span>|</span>
@@ -299,10 +296,13 @@
                     <span>|</span>
                     <button onclick="showScreen('contactScreen')" class="hover:text-prasatek-primary transition">Contact</button>
                 </div>
+                <div class="text-[9px] font-bold text-gray-300 uppercase tracking-widest text-center mt-2">
+                    <p>A PRODUCT BY PRASATEK SYSTEM SOLUTIONS</p>
+                    <p class="mt-1">www.prasatek.site | 0719323239</p>
+                </div>
             </div>
         </div>
 
-        <!-- ================= ADD ACCOUNT MODAL ================= -->
         <div id="addAccountModal" class="absolute inset-0 bg-slate-900 bg-opacity-60 z-50 hidden opacity-0 flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-150 ease-in-out">
             <div class="bg-white rounded-[1.5rem] w-full max-w-sm p-7 shadow-2xl transform transition-all">
                 <h3 class="text-2xl font-extrabold text-slate-800 mb-1">Add New Account</h3>
@@ -314,7 +314,7 @@
                         <input type="text" id="accNameInput" required placeholder="BOC" class="w-full border border-gray-300 text-slate-800 text-sm font-semibold rounded-xl px-4 py-3 focus:ring-2 focus:ring-slate-800 outline-none transition">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1.5">Initial Balance (Rs)</label>
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">Initial Balance (RS)</label>
                         <input type="number" id="accBalanceInput" required min="0" step="0.01" placeholder="3000" class="w-full border border-gray-300 text-slate-800 text-sm font-semibold rounded-xl px-4 py-3 focus:ring-2 focus:ring-slate-800 outline-none transition">
                     </div>
                     
@@ -322,13 +322,12 @@
 
                     <div class="flex gap-3 pt-4">
                         <button type="button" id="closeAccModalBtn" class="w-1/2 bg-[#e2e8f0] hover:bg-gray-300 text-slate-600 font-bold py-3 rounded-xl transition">Cancel</button>
-                        <button type="submit" id="saveAccBtn" class="w-1/2 bg-prasatek-dark hover-prasatek-dark text-white font-bold py-3 rounded-xl transition">Saving...</button>
+                        <button type="submit" id="saveAccBtn" class="w-1/2 bg-prasatek-dark hover:bg-slate-800 text-white font-bold py-3 rounded-xl transition">Save Account</button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- ================= CUSTOM CONFIRMATION MODAL ================= -->
         <div id="confirmModal" class="absolute inset-0 bg-slate-900 bg-opacity-60 z-[60] hidden opacity-0 flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-150 ease-in-out">
             <div class="bg-white rounded-[1.5rem] w-full max-w-sm p-6 shadow-2xl transform transition-all text-center">
                 <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
@@ -344,9 +343,7 @@
         </div>
     </div>
 
-    <!-- ================= JAVASCRIPT ================= -->
     <script>
-        // 1. Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyA7dv-PMi_4nnwpjnSEgiJPF15jGQz_Ygo",
             authDomain: "expenses-c3712.firebaseapp.com",
@@ -362,14 +359,13 @@
         const db = firebase.firestore();
         const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-        // State Variables
         let currentUser = null;
         let userAccounts = [];
         let allTransactions = [];
         let expenseChartInstance = null; 
         let confirmActionCallback = null;
+        let isLoginMode = true;
 
-        // DOM Elements
         const screens = {
             auth: document.getElementById('authScreen'),
             main: document.getElementById('mainScreen'),
@@ -381,28 +377,27 @@
         
         const emailInput = document.getElementById('emailInput');
         const passwordInput = document.getElementById('passwordInput');
+        const nameInput = document.getElementById('nameInput');
+        const mobileInput = document.getElementById('mobileInput');
         const authSubmitBtn = document.getElementById('authSubmitBtn');
         const authError = document.getElementById('authError');
+        const authSuccess = document.getElementById('authSuccess');
+        const toggleAuthBtn = document.getElementById('toggleAuthBtn');
         
         const dateInput = document.getElementById('dateInput');
         const txAccountSelect = document.getElementById('txAccountSelect');
         const submitTxBtn = document.getElementById('submitTxBtn');
-
-        // Filter Elements
         const filterMonth = document.getElementById('filterMonth');
         const filterDate = document.getElementById('filterDate');
         const filterAccount = document.getElementById('filterAccount');
 
-        // Set Initial Date
         const today = new Date();
         dateInput.value = today.toISOString().split('T')[0];
         filterMonth.value = today.toISOString().slice(0, 7);
 
-        // ================= SPA SCREEN ROUTING =================
         function showScreen(target) {
             loadingScreen.classList.add('hidden');
             loadingScreen.classList.remove('flex');
-
             Object.values(screens).forEach(s => {
                 s.classList.add('hidden', 'opacity-0');
                 s.classList.remove('flex');
@@ -430,41 +425,106 @@
             }
         }
 
-        // ================= CUSTOM CONFIRMATION POPUP =================
         const confirmModal = document.getElementById('confirmModal');
-        
         function showConfirmPopup(title, message, callback) {
             document.getElementById('confirmTitle').textContent = title;
             document.getElementById('confirmMessage').textContent = message;
             confirmActionCallback = callback;
-            
             confirmModal.classList.remove('hidden');
             confirmModal.classList.add('flex');
             setTimeout(() => confirmModal.classList.remove('opacity-0'), 10);
         }
 
-        document.getElementById('cancelConfirmBtn').addEventListener('click', closeConfirmPopup);
-        document.getElementById('acceptConfirmBtn').addEventListener('click', () => {
-            if(confirmActionCallback) confirmActionCallback();
-            closeConfirmPopup();
-        });
-
-        function closeConfirmPopup() {
+        document.getElementById('cancelConfirmBtn').addEventListener('click', () => {
             confirmModal.classList.add('opacity-0');
             setTimeout(() => { confirmModal.classList.add('hidden'); confirmModal.classList.remove('flex'); }, 150);
             confirmActionCallback = null;
-        }
+        });
 
-        // ================= AUTHENTICATION LOGIC =================
+        document.getElementById('acceptConfirmBtn').addEventListener('click', () => {
+            if(confirmActionCallback) confirmActionCallback();
+            confirmModal.classList.add('opacity-0');
+            setTimeout(() => { confirmModal.classList.add('hidden'); confirmModal.classList.remove('flex'); }, 150);
+            confirmActionCallback = null;
+        });
+
+        // ================= AUTH LOGIC =================
+        toggleAuthBtn.addEventListener('click', () => {
+            isLoginMode = !isLoginMode;
+            authError.classList.add('hidden');
+            authSuccess.classList.add('hidden');
+            if (isLoginMode) {
+                document.getElementById('authTitle').textContent = "Welcome Back";
+                document.getElementById('authSubtitle').textContent = "Sign in to manage your accounts";
+                authSubmitBtn.innerHTML = `<span>LOGIN</span>`;
+                document.getElementById('nameFieldContainer').classList.add('hidden');
+                document.getElementById('mobileFieldContainer').classList.add('hidden');
+                nameInput.removeAttribute('required');
+                mobileInput.removeAttribute('required');
+                document.getElementById('authToggleText').textContent = "Don't have an account?";
+                toggleAuthBtn.textContent = "Register now";
+            } else {
+                document.getElementById('authTitle').textContent = "Create Account";
+                document.getElementById('authSubtitle').textContent = "Join ExpenseTracker Pro today";
+                authSubmitBtn.innerHTML = `<span>REGISTER</span>`;
+                document.getElementById('nameFieldContainer').classList.remove('hidden');
+                document.getElementById('mobileFieldContainer').classList.remove('hidden');
+                nameInput.setAttribute('required', 'true');
+                mobileInput.setAttribute('required', 'true');
+                document.getElementById('authToggleText').textContent = "Already have an account?";
+                toggleAuthBtn.textContent = "Login here";
+            }
+        });
+
         document.getElementById('authForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = emailInput.value.trim();
             const password = passwordInput.value;
+            const name = nameInput.value.trim();
+            const mobile = mobileInput.value.trim();
+            
             authError.classList.add('hidden');
+            authSuccess.classList.add('hidden');
             authSubmitBtn.disabled = true;
 
             try {
-                await auth.signInWithEmailAndPassword(email, password);
+                if (isLoginMode) {
+                    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                    const user = userCredential.user;
+                    
+                    // Admin routing and bypass verification check
+                    if (user.email === 'admin@prasatek.site') {
+                        window.location.href = 'admin.html';
+                        return;
+                    }
+
+                    if (!user.emailVerified) {
+                        await auth.signOut();
+                        throw new Error("Please verify your email address before logging in. Check your inbox.");
+                    }
+                } else {
+                    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                    const user = userCredential.user;
+                    
+                    await user.updateProfile({ displayName: name });
+                    
+                    // Save to users collection
+                    await db.collection("users").doc(user.uid).set({
+                        uid: user.uid,
+                        email: email,
+                        displayName: name,
+                        mobile: mobile,
+                        createdAt: Date.now()
+                    });
+
+                    await user.sendEmailVerification();
+                    await auth.signOut();
+                    
+                    authSuccess.textContent = "Registration successful! A verification email has been sent. Please confirm before logging in.";
+                    authSuccess.classList.remove('hidden');
+                    document.getElementById('authForm').reset();
+                    toggleAuthBtn.click(); // switch to login mode
+                }
             } catch (error) {
                 authError.textContent = error.message;
                 authError.classList.remove('hidden');
@@ -472,18 +532,42 @@
             authSubmitBtn.disabled = false;
         });
 
-        document.getElementById('googleLoginBtn').addEventListener('click', () => {
+        document.getElementById('googleLoginBtn').addEventListener('click', async () => {
             authError.classList.add('hidden');
-            auth.signInWithPopup(googleProvider).catch(error => {
+            try {
+                const result = await auth.signInWithPopup(googleProvider);
+                const user = result.user;
+                if (user.email === 'admin@prasatek.site') {
+                    window.location.href = 'admin.html';
+                    return;
+                }
+                
+                // For Google, email is usually verified automatically, but ensure user doc exists
+                const userDoc = await db.collection("users").doc(user.uid).get();
+                if (!userDoc.exists) {
+                    await db.collection("users").doc(user.uid).set({
+                        uid: user.uid, email: user.email, displayName: user.displayName, mobile: "", createdAt: Date.now()
+                    });
+                }
+            } catch (error) {
                 authError.textContent = error.message;
                 authError.classList.remove('hidden');
-            });
+            }
         });
 
         auth.onAuthStateChanged(user => {
             if (user) {
+                if (user.email === 'admin@prasatek.site') {
+                    window.location.href = 'admin.html';
+                    return;
+                }
+                if (!user.emailVerified) {
+                    auth.signOut();
+                    return; // Prevent logic load if unverified
+                }
+                
                 currentUser = user;
-                document.getElementById('userNameDisplay').textContent = user.displayName || user.email.split('@')[0] || "Admin";
+                document.getElementById('userNameDisplay').textContent = user.displayName || user.email.split('@')[0] || "User";
                 document.getElementById('userProfilePic').src = user.photoURL || "https://ui-avatars.com/api/?name=" + (user.displayName || "A") + "&background=0b8c5a&color=fff";
                 
                 showScreen('main');
@@ -496,7 +580,7 @@
 
         document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut());
 
-        // ================= DATA LOGIC =================
+        // ================= APP LOGIC =================
         async function fetchData() {
             if(!currentUser) return;
             try {
@@ -527,8 +611,6 @@
             });
 
             const accountsListDiv = document.getElementById('accountsList');
-            
-            // Preserve Account Filter Selection
             const currentFilterAcc = filterAccount.value;
             
             txAccountSelect.innerHTML = ''; 
@@ -550,31 +632,27 @@
                 userAccounts.forEach(acc => {
                     const currentBal = accountBalances[acc.id];
                     globalTotal += currentBal;
-                    
                     chartLabels.push(acc.name);
                     chartData.push(Math.max(0, currentBal)); 
-
                     const balColor = currentBal < 0 ? 'text-red-500' : 'text-slate-800';
                     
-                    // Added Delete Button to Account Card
                     accountsListDiv.innerHTML += `
                         <div class="min-w-[140px] snap-center bg-white border border-gray-100 p-4 rounded-2xl shadow-sm relative group">
                             <button onclick="deleteAccount('${acc.id}')" class="absolute top-2 right-2 text-gray-300 hover:text-red-500 bg-gray-50 hover:bg-red-50 p-1.5 rounded-lg transition" title="Delete Account">
                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
                             </button>
                             <p class="text-[11px] font-extrabold text-gray-400 uppercase tracking-wider truncate pr-6">${acc.name}</p>
-                            <p class="text-xl font-extrabold ${balColor} mt-1 truncate">Rs ${currentBal.toFixed(2)}</p>
+                            <p class="text-xl font-extrabold ${balColor} mt-1 truncate">RS ${currentBal.toFixed(2)}</p>
                         </div>
                     `;
-                    txAccountSelect.innerHTML += `<option value="${acc.id}">${acc.name} (Bal: Rs ${currentBal.toFixed(2)})</option>`;
+                    txAccountSelect.innerHTML += `<option value="${acc.id}">${acc.name} (Bal: RS ${currentBal.toFixed(2)})</option>`;
                     filterAccount.innerHTML += `<option value="${acc.id}">${acc.name}</option>`;
                 });
             }
 
-            filterAccount.value = currentFilterAcc; // Restore filter
-            document.getElementById('globalBalanceDisplay').textContent = `Rs ${globalTotal.toFixed(2)}`;
+            filterAccount.value = currentFilterAcc; 
+            document.getElementById('globalBalanceDisplay').textContent = `RS ${globalTotal.toFixed(2)}`;
 
-            // Apply Advanced History Filters
             const listUI = document.getElementById('transactionList');
             const fMonth = filterMonth.value;
             const fDate = filterDate.value;
@@ -596,7 +674,7 @@
                     const accRef = userAccounts.find(a => a.id === tx.accountId);
                     const accName = accRef ? accRef.name : 'Unknown Account';
                     const isIncome = tx.type === 'add';
-                    const amountText = isIncome ? `+ Rs ${tx.amount.toFixed(2)}` : `- Rs ${tx.amount.toFixed(2)}`;
+                    const amountText = isIncome ? `+ RS ${tx.amount.toFixed(2)}` : `- RS ${tx.amount.toFixed(2)}`;
                     const colorClass = isIncome ? 'text-prasatek-primary' : 'text-red-500';
                     const categoryPill = tx.category ? `<span class="bg-gray-100 px-2 py-0.5 rounded-full text-slate-500 mr-1">${tx.category}</span>` : '';
 
@@ -619,68 +697,36 @@
                     `;
                 });
             }
-
-            // Update Chart Data with Account Balances
             updateChart(chartLabels, chartData);
         }
 
-        // ================= CHART LOGIC =================
         function updateChart(labels, data) {
             const ctx = document.getElementById('expenseChart');
             if (!ctx) return;
-
-            if (expenseChartInstance) {
-                expenseChartInstance.destroy(); 
-            }
-
+            if (expenseChartInstance) expenseChartInstance.destroy(); 
             if (data.length === 0 || data.every(val => val === 0)) {
                 ctx.parentElement.parentElement.style.display = 'none';
                 return;
             }
-            
             ctx.parentElement.parentElement.style.display = 'flex';
             expenseChartInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        data: data,
-                        backgroundColor: ['#0b8c5a', '#1e293b', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#64748b'],
-                        borderWidth: 0
-                    }]
+                    datasets: [{ data: data, backgroundColor: ['#0b8c5a', '#1e293b', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#64748b'], borderWidth: 0 }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } }
-                }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } } }
             });
         }
 
-        // ================= FILTER LISTENERS =================
-        filterMonth.addEventListener('change', () => {
-            filterDate.value = ''; // clear specific date if month is picked
-            renderDashboard();
-        });
-        
-        filterDate.addEventListener('change', () => {
-            if(filterDate.value) { filterMonth.value = ''; } // clear month if specific date is picked
-            renderDashboard();
-        });
-
+        filterMonth.addEventListener('change', () => { filterDate.value = ''; renderDashboard(); });
+        filterDate.addEventListener('change', () => { if(filterDate.value) filterMonth.value = ''; renderDashboard(); });
         filterAccount.addEventListener('change', renderDashboard);
 
-        // ================= CSV EXPORT =================
         document.getElementById('exportCsvBtn').addEventListener('click', () => {
             if (allTransactions.length === 0) return alert("No data available to export.");
-
-            let csvContent = "data:text/csv;charset=utf-8,Date,Month,Account,Type,Category,Description,Amount (Rs)\n";
-            
-            const fMonth = filterMonth.value;
-            const fDate = filterDate.value;
-            const fAcc = filterAccount.value;
-
-            // Export ONLY what is currently filtered
+            let csvContent = "data:text/csv;charset=utf-8,Date,Month,Account,Type,Category,Description,Amount (RS)\n";
+            const fMonth = filterMonth.value; const fDate = filterDate.value; const fAcc = filterAccount.value;
             const filteredTx = allTransactions.filter(tx => {
                 let match = true;
                 if (fMonth && tx.month !== fMonth) match = false;
@@ -688,34 +734,26 @@
                 if (fAcc && tx.accountId !== fAcc) match = false;
                 return match;
             });
-
             filteredTx.forEach(tx => {
                 const accRef = userAccounts.find(a => a.id === tx.accountId);
                 const accName = accRef ? accRef.name : 'Unknown';
                 const typeStr = tx.type === 'add' ? 'Income' : 'Expense';
                 const catStr = tx.category || 'N/A';
-                const cleanDesc = `"${tx.description.replace(/"/g, '""')}"`;
-                
-                csvContent += `${tx.date},${tx.month},${accName},${typeStr},${catStr},${cleanDesc},${tx.amount.toFixed(2)}\n`;
+                csvContent += `${tx.date},${tx.month},${accName},${typeStr},${catStr},"${tx.description.replace(/"/g, '""')}",${tx.amount.toFixed(2)}\n`;
             });
-
             const link = document.createElement("a");
             link.href = encodeURI(csvContent);
             link.download = `Prasatek_Transactions_Export.csv`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
         });
 
-        // ================= MODALS & FORMS =================
+        // MODALS
         const addAccModal = document.getElementById('addAccountModal');
         document.getElementById('openAccModalBtn').addEventListener('click', () => {
             document.getElementById('modalError').classList.add('hidden');
-            addAccModal.classList.remove('hidden');
-            addAccModal.classList.add('flex');
+            addAccModal.classList.remove('hidden'); addAccModal.classList.add('flex');
             setTimeout(() => addAccModal.classList.remove('opacity-0'), 10);
         });
-        
         document.getElementById('closeAccModalBtn').addEventListener('click', () => {
             addAccModal.classList.add('opacity-0');
             setTimeout(() => { addAccModal.classList.add('hidden'); addAccModal.classList.remove('flex'); }, 150);
@@ -726,74 +764,48 @@
             const btn = document.getElementById('saveAccBtn');
             const name = document.getElementById('accNameInput').value.trim();
             const initBal = parseFloat(document.getElementById('accBalanceInput').value);
-            
             if (name && !isNaN(initBal)) {
-                btn.textContent = "Saving...";
-                btn.disabled = true;
-                
+                btn.textContent = "Saving..."; btn.disabled = true;
                 try {
-                    await db.collection("accounts").add({
-                        userId: currentUser.uid, name: name, initialBalance: initBal, timestamp: Date.now()
-                    });
+                    await db.collection("accounts").add({ userId: currentUser.uid, name: name, initialBalance: initBal, timestamp: Date.now() });
                     document.getElementById('addAccountForm').reset();
                     document.getElementById('closeAccModalBtn').click();
                     fetchData(); 
                 } catch (error) {
                     const errUi = document.getElementById('modalError');
-                    errUi.textContent = "Error saving. Please check your Firebase Rules.";
-                    errUi.classList.remove('hidden');
-                } finally {
-                    btn.textContent = "Save Account"; 
-                    btn.disabled = false;
-                }
+                    errUi.textContent = "Error saving. Please check your Firebase Rules."; errUi.classList.remove('hidden');
+                } finally { btn.textContent = "Save Account"; btn.disabled = false; }
             }
         });
 
         document.getElementById('trackerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const accId = txAccountSelect.value;
-            const dateVal = dateInput.value;
-            const type = document.getElementById('typeInput').value;
-            const category = document.getElementById('categoryInput').value;
-            const desc = document.getElementById('descInput').value.trim();
+            const accId = txAccountSelect.value; const dateVal = dateInput.value; const type = document.getElementById('typeInput').value;
+            const category = document.getElementById('categoryInput').value; const desc = document.getElementById('descInput').value.trim();
             const amount = parseFloat(document.getElementById('amountInput').value);
-
             if (accId && desc && amount > 0 && dateVal) {
-                submitTxBtn.disabled = true;
-                submitTxBtn.innerHTML = "PROCESSING...";
-
+                submitTxBtn.disabled = true; submitTxBtn.innerHTML = "PROCESSING...";
                 try {
                     await db.collection("transactions").add({
                         userId: currentUser.uid, accountId: accId, date: dateVal, month: dateVal.slice(0, 7),
                         type: type, category: category, description: desc, amount: amount, timestamp: Date.now()
                     });
-                    document.getElementById('descInput').value = '';
-                    document.getElementById('amountInput').value = '';
-                    
-                    // Reset filters so the new entry is visible
-                    filterDate.value = '';
-                    filterMonth.value = dateVal.slice(0, 7); 
-                    
+                    document.getElementById('descInput').value = ''; document.getElementById('amountInput').value = '';
+                    filterDate.value = ''; filterMonth.value = dateVal.slice(0, 7); 
                     fetchData(); 
-                } finally {
-                    submitTxBtn.disabled = false;
-                    submitTxBtn.innerHTML = "MARK TRANSACTION";
-                }
+                } finally { submitTxBtn.disabled = false; submitTxBtn.innerHTML = "MARK TRANSACTION"; }
             }
         });
 
-        // Delete Logic utilizing Custom Confirm Popup
         window.deleteTx = (id) => {
             showConfirmPopup("Delete Record", "Are you sure you want to permanently delete this transaction?", async () => {
-                await db.collection("transactions").doc(id).delete();
-                fetchData();
+                await db.collection("transactions").doc(id).delete(); fetchData();
             });
         };
 
         window.deleteAccount = (id) => {
             showConfirmPopup("Delete Account", "Are you sure? Existing transactions associated with this account will display as 'Unknown'.", async () => {
-                await db.collection("accounts").doc(id).delete();
-                fetchData();
+                await db.collection("accounts").doc(id).delete(); fetchData();
             });
         };
 
