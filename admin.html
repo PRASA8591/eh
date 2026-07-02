@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Expense Tracker Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" href="favicon.png">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <style>
+        .bg-prasatek-light { background-color: #eef2f6; }
+        .text-prasatek-primary { color: #0b8c5a; }
+        .bg-prasatek-primary { background-color: #0b8c5a; }
+        .bg-prasatek-dark { background-color: #1e293b; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans antialiased text-slate-800">
+
+    <nav class="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-prasatek-primary flex items-center justify-center text-white font-bold">PT</div>
+                    <span class="font-extrabold text-xl tracking-tight">Admin<span class="text-prasatek-primary">Panel</span></span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm font-bold text-slate-500 hidden sm:block">admin@prasatek.site</span>
+                    <button id="logoutBtn" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg text-sm font-bold transition">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row gap-8 relative">
+        
+        <div id="loadingOverlay" class="absolute inset-0 bg-gray-50/90 z-40 flex flex-col items-center justify-center min-h-[500px]">
+            <div class="w-10 h-10 border-4 border-prasatek-light border-t-prasatek-primary rounded-full animate-spin mb-4"></div>
+            <p class="text-sm font-bold text-gray-500 uppercase tracking-widest">Verifying Admin Access...</p>
+        </div>
+
+        <div class="w-full md:w-1/3 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[80vh]">
+            <div class="p-5 border-b border-gray-100">
+                <h2 class="text-lg font-extrabold text-slate-800">Registered Users</h2>
+                <p class="text-xs font-bold text-gray-400 mt-1 uppercase tracking-wide" id="totalUsersCount">0 Users</p>
+            </div>
+            <div class="flex-1 overflow-y-auto hide-scroll p-3 space-y-2" id="userListContainer">
+                </div>
+        </div>
+
+        <div class="w-full md:w-2/3 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[80vh] overflow-hidden">
+            
+            <div id="emptyDetailState" class="flex-1 flex flex-col items-center justify-center text-gray-400">
+                <svg class="w-16 h-16 mb-4 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                <p class="font-bold text-sm">Select a user to view details</p>
+            </div>
+
+            <div id="userDetailView" class="hidden flex-col h-full">
+                <div class="p-6 border-b border-gray-100 bg-prasatek-light">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-prasatek-primary rounded-full flex items-center justify-center text-white font-bold text-xl" id="detailAvatar">U</div>
+                        <div>
+                            <h2 class="text-xl font-extrabold text-slate-900" id="detailName">User Name</h2>
+                            <p class="text-sm font-bold text-slate-500" id="detailEmail">user@email.com</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mt-6">
+                        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase">Mobile Number</p>
+                            <p class="font-bold text-slate-800" id="detailMobile">N/A</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase">Joined</p>
+                            <p class="font-bold text-slate-800" id="detailDate">N/A</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto hide-scroll p-6 bg-gray-50">
+                    <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide mb-4">Accounts & Balances</h3>
+                    <div class="grid grid-cols-2 gap-3 mb-8" id="detailAccounts">
+                        </div>
+
+                    <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide mb-4">Recent History (All Accounts)</h3>
+                    <ul class="space-y-3" id="detailHistory">
+                        </ul>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyA7dv-PMi_4nnwpjnSEgiJPF15jGQz_Ygo",
+            authDomain: "expenses-c3712.firebaseapp.com",
+            projectId: "expenses-c3712",
+            storageBucket: "expenses-c3712.firebasestorage.app",
+            messagingSenderId: "225723251952",
+            appId: "1:225723251952:web:ae224e1131004e418e1635"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Security / Admin Redirect Check
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                if (user.email !== 'admin@prasatek.site') {
+                    // Kick out non-admins
+                    auth.signOut().then(() => window.location.href = 'index.html');
+                } else {
+                    document.getElementById('loadingOverlay').classList.add('hidden');
+                    loadUsers();
+                }
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            auth.signOut().then(() => window.location.href = 'index.html');
+        });
+
+        async function loadUsers() {
+            try {
+                const usersSnap = await db.collection('users').orderBy('createdAt', 'desc').get();
+                const container = document.getElementById('userListContainer');
+                container.innerHTML = '';
+                document.getElementById('totalUsersCount').textContent = `${usersSnap.size} Users`;
+
+                usersSnap.forEach(doc => {
+                    const u = doc.data();
+                    const initial = (u.displayName || u.email || '?').charAt(0).toUpperCase();
+                    
+                    const card = document.createElement('div');
+                    card.className = "flex items-center gap-3 p-3 rounded-xl hover:bg-prasatek-light cursor-pointer transition border border-transparent hover:border-gray-200";
+                    card.onclick = () => loadUserDetails(u);
+                    
+                    card.innerHTML = `
+                        <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600 shrink-0">${initial}</div>
+                        <div class="flex-1 overflow-hidden">
+                            <p class="font-bold text-slate-800 text-sm truncate">${u.displayName || 'Unnamed User'}</p>
+                            <p class="text-xs text-gray-500 truncate">${u.email}</p>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                console.error("Error fetching users:", error);
+                alert("Failed to load users. Ensure Firestore rules allow Admin reads.");
+            }
+        }
+
+        async function loadUserDetails(user) {
+            document.getElementById('emptyDetailState').classList.add('hidden');
+            document.getElementById('userDetailView').classList.remove('hidden');
+            document.getElementById('userDetailView').classList.add('flex');
+
+            document.getElementById('detailAvatar').textContent = (user.displayName || user.email || '?').charAt(0).toUpperCase();
+            document.getElementById('detailName').textContent = user.displayName || 'Unnamed User';
+            document.getElementById('detailEmail').textContent = user.email;
+            document.getElementById('detailMobile').textContent = user.mobile || 'Not Provided';
+            
+            const dateStr = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown';
+            document.getElementById('detailDate').textContent = dateStr;
+
+            const accDiv = document.getElementById('detailAccounts');
+            const histDiv = document.getElementById('detailHistory');
+            
+            accDiv.innerHTML = '<p class="text-xs font-bold text-gray-400 col-span-2">Loading data...</p>';
+            histDiv.innerHTML = '';
+
+            try {
+                // Fetch Accounts
+                const accSnap = await db.collection("accounts").where("userId", "==", user.uid).get();
+                let userAccounts = [];
+                let accountBalances = {};
+                accSnap.forEach(doc => {
+                    const data = { id: doc.id, ...doc.data() };
+                    userAccounts.push(data);
+                    accountBalances[data.id] = data.initialBalance;
+                });
+
+                // Fetch Transactions
+                const txSnap = await db.collection("transactions").where("userId", "==", user.uid).get();
+                let allTransactions = [];
+                txSnap.forEach(doc => {
+                    const t = { id: doc.id, ...doc.data() };
+                    allTransactions.push(t);
+                    if (accountBalances[t.accountId] !== undefined) {
+                        if (t.type === 'add') accountBalances[t.accountId] += t.amount;
+                        else accountBalances[t.accountId] -= t.amount;
+                    }
+                });
+                
+                allTransactions.sort((a, b) => b.timestamp - a.timestamp);
+
+                // Render Accounts
+                accDiv.innerHTML = '';
+                if (userAccounts.length === 0) {
+                    accDiv.innerHTML = '<div class="col-span-2 bg-white border border-dashed border-gray-200 p-4 rounded-xl text-center text-xs font-bold text-gray-400">No accounts created.</div>';
+                } else {
+                    userAccounts.forEach(acc => {
+                        const currentBal = accountBalances[acc.id];
+                        const balColor = currentBal < 0 ? 'text-red-500' : 'text-slate-800';
+                        accDiv.innerHTML += `
+                            <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
+                                <p class="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider truncate">${acc.name}</p>
+                                <p class="text-lg font-extrabold ${balColor} mt-1 truncate">RS ${currentBal.toFixed(2)}</p>
+                            </div>
+                        `;
+                    });
+                }
+
+                // Render History
+                if (allTransactions.length === 0) {
+                    histDiv.innerHTML = '<li class="bg-white border border-dashed border-gray-200 p-6 rounded-xl text-center text-xs font-bold text-gray-400 uppercase tracking-widest">No Records Found</li>';
+                } else {
+                    allTransactions.forEach(tx => {
+                        const accRef = userAccounts.find(a => a.id === tx.accountId);
+                        const accName = accRef ? accRef.name : 'Unknown Account';
+                        const isIncome = tx.type === 'add';
+                        const amountText = isIncome ? `+ RS ${tx.amount.toFixed(2)}` : `- RS ${tx.amount.toFixed(2)}`;
+                        const colorClass = isIncome ? 'text-prasatek-primary' : 'text-red-500';
+
+                        histDiv.innerHTML += `
+                            <li class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                                <div class="flex-1 overflow-hidden pr-3">
+                                    <p class="font-bold text-slate-800 text-sm truncate">${tx.description}</p>
+                                    <p class="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-wide">
+                                        <span class="text-slate-500">${accName}</span> • ${tx.date}
+                                    </p>
+                                </div>
+                                <span class="font-extrabold ${colorClass} text-sm whitespace-nowrap">${amountText}</span>
+                            </li>
+                        `;
+                    });
+                }
+
+            } catch (error) {
+                console.error("Error fetching user details:", error);
+                accDiv.innerHTML = '<p class="text-xs text-red-500 font-bold col-span-2">Error loading user data.</p>';
+            }
+        }
+    </script>
+</body>
+</html>
