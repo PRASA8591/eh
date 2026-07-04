@@ -48,6 +48,10 @@
             <div class="p-5 border-b border-gray-100">
                 <h2 class="text-lg font-extrabold text-slate-800">Registered Users</h2>
                 <p class="text-xs font-bold text-gray-400 mt-1 uppercase tracking-wide" id="totalUsersCount">0 Users</p>
+                <p class="text-xs text-gray-400 mt-1" id="dataSource">Source: unknown</p>
+                <div class="mt-3">
+                    <button id="openAddUserBtn" class="text-xs bg-prasatek-primary text-white px-3 py-1 rounded-lg">Add User</button>
+                </div>
             </div>
             <div class="flex-1 overflow-y-auto hide-scroll p-3 space-y-2" id="userListContainer">
                 </div>
@@ -95,25 +99,57 @@
         </div>
     </main>
 
+    <div id="addUserModal" class="hidden fixed inset-0 z-50 items-center justify-center bg-black bg-opacity-40">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md mx-auto">
+            <h3 class="text-lg font-extrabold mb-3">Add Firestore User</h3>
+            <form id="addUserForm" class="space-y-3">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase">UID</label>
+                    <input id="addUid" type="text" required class="w-full bg-prasatek-light text-slate-800 text-sm font-semibold rounded-xl px-4 py-3 border-none outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase">Email</label>
+                    <input id="addEmail" type="email" class="w-full bg-prasatek-light text-slate-800 text-sm font-semibold rounded-xl px-4 py-3 border-none outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase">Display Name</label>
+                    <input id="addDisplayName" type="text" class="w-full bg-prasatek-light text-slate-800 text-sm font-semibold rounded-xl px-4 py-3 border-none outline-none">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase">Mobile</label>
+                    <input id="addMobile" type="tel" class="w-full bg-prasatek-light text-slate-800 text-sm font-semibold rounded-xl px-4 py-3 border-none outline-none">
+                </div>
+                <div class="flex gap-3 justify-end pt-3">
+                    <button type="button" id="closeAddUser" class="bg-[#e2e8f0] hover:bg-gray-300 text-slate-700 font-bold py-2 px-4 rounded-xl">Cancel</button>
+                    <button type="submit" id="saveAddUser" class="bg-prasatek-primary hover:bg-[#09734a] text-white font-bold py-2 px-4 rounded-xl">Save User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         const firebaseConfig = {
-            apiKey: "AIzaSyA7dv-PMi_4nnwpjnSEgiJPF15jGQz_Ygo",
-            authDomain: "expenses-c3712.firebaseapp.com",
-            projectId: "expenses-c3712",
-            storageBucket: "expenses-c3712.firebasestorage.app",
-            messagingSenderId: "225723251952",
-            appId: "1:225723251952:web:ae224e1131004e418e1635"
+            apiKey: "AIzaSyAndmai3Gm7kYE6Tezdsam6UcGK6a7iNsY",
+            authDomain: "expenses-2-b78b3.firebaseapp.com",
+            projectId: "expenses-2-b78b3",
+            storageBucket: "expenses-2-b78b3.firebasestorage.app",
+            messagingSenderId: "40902555112",
+            appId: "1:40902555112:web:ed9a173015898c21f3205d",
+            measurementId: "G-BEWFG1WZF7"
         };
 
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // Security / Admin Redirect Check
+        // STRICT TAB ISOLATION (SESSION)
+        auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch((error) => console.warn(error));
+
+        let adminUsersWithAccounts = []; 
+
         auth.onAuthStateChanged(user => {
             if (user) {
                 if (user.email !== 'admin@prasatek.site') {
-                    // Kick out non-admins
                     auth.signOut().then(() => window.location.href = 'index.html');
                 } else {
                     document.getElementById('loadingOverlay').classList.add('hidden');
@@ -129,46 +165,201 @@
         });
 
         async function loadUsers() {
-            try {
-                const usersSnap = await db.collection('users').orderBy('createdAt', 'desc').get();
-                const container = document.getElementById('userListContainer');
-                container.innerHTML = '';
-                document.getElementById('totalUsersCount').textContent = `${usersSnap.size} Users`;
+            const container = document.getElementById('userListContainer');
+            container.innerHTML = '';
 
-                usersSnap.forEach(doc => {
-                    const u = doc.data();
-                    const initial = (u.displayName || u.email || '?').charAt(0).toUpperCase();
-                    
+            try {
+                const usersSnap = await db.collection('users').get();
+                const userDocs = [];
+                usersSnap.forEach(doc => userDocs.push({ id: doc.id, ...doc.data() }));
+
+                userDocs.sort((a, b) => {
+                    const aTime = a.lastLoginAt?.toDate ? a.lastLoginAt.toDate().getTime() : 0;
+                    const bTime = b.lastLoginAt?.toDate ? b.lastLoginAt.toDate().getTime() : 0;
+                    return bTime - aTime;
+                });
+
+                const visibleUsers = userDocs.filter(u => u.email !== 'admin@prasatek.site');
+                adminUsersWithAccounts = visibleUsers;
+                document.getElementById('totalUsersCount').textContent = `${visibleUsers.length} Users`;
+                document.getElementById('dataSource').textContent = 'Source: Firestore users collection';
+
+                if (!visibleUsers.length) {
+                    const accAll = await db.collection('accounts').get();
+                    const byUser = {};
+                    accAll.forEach(doc => {
+                        const d = doc.data();
+                        const uid = d.userId || d.uid;
+                        if (!uid) return;
+                        if (!byUser[uid]) byUser[uid] = [];
+                        byUser[uid].push({ id: doc.id, ...d });
+                    });
+
+                    const derived = Object.keys(byUser).map(uid => ({ uid, displayName: '', email: '', accounts: byUser[uid] }));
+                    if (derived.length) {
+                        adminUsersWithAccounts = derived;
+                        document.getElementById('totalUsersCount').textContent = `${derived.length} Users`;
+                        document.getElementById('dataSource').textContent = 'Source: derived from accounts collection';
+                        derived.forEach(u => {
+                            const initial = (u.displayName || u.email || u.uid || '?').charAt(0).toUpperCase();
+                            const card = document.createElement('div');
+                            card.className = "flex items-center gap-3 p-3 rounded-xl hover:bg-prasatek-light cursor-pointer transition border border-transparent hover:border-gray-200";
+                            card.onclick = () => loadUserDetails(u);
+                            card.innerHTML = `
+                                <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600 shrink-0">${initial}</div>
+                                <div class="flex-1 overflow-hidden">
+                                    <p class="font-bold text-slate-800 text-sm truncate">${u.displayName || u.uid}</p>
+                                    <p class="text-xs text-gray-500 truncate">${u.email || 'No email'}</p>
+                                </div>
+                            `;
+                            container.appendChild(card);
+                        });
+                        return;
+                    }
+
+                    container.innerHTML = '<div class="p-6 text-center text-xs font-bold text-gray-400">No synced users found yet. Ensure users have logged in since the fix.</div>';
+                    return;
+                }
+
+                visibleUsers.forEach(u => {
+                    const initial = (u.displayName || u.email || u.uid || '?').charAt(0).toUpperCase();
                     const card = document.createElement('div');
                     card.className = "flex items-center gap-3 p-3 rounded-xl hover:bg-prasatek-light cursor-pointer transition border border-transparent hover:border-gray-200";
                     card.onclick = () => loadUserDetails(u);
-                    
                     card.innerHTML = `
                         <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600 shrink-0">${initial}</div>
                         <div class="flex-1 overflow-hidden">
                             <p class="font-bold text-slate-800 text-sm truncate">${u.displayName || 'Unnamed User'}</p>
-                            <p class="text-xs text-gray-500 truncate">${u.email}</p>
+                            <p class="text-xs text-gray-500 truncate">${u.email || 'No email'}</p>
                         </div>
                     `;
                     container.appendChild(card);
                 });
             } catch (error) {
                 console.error("Error fetching users:", error);
-                alert("Failed to load users. Ensure Firestore rules allow Admin reads.");
+                alert("Failed to load users from Database. Ensure Firestore rules allow Admin read access.");
             }
         }
+
+        function renderAccountsAndHistory(userAccounts, allTransactions) {
+            const accDiv = document.getElementById('detailAccounts');
+            const histDiv = document.getElementById('detailHistory');
+            accDiv.innerHTML = '';
+            histDiv.innerHTML = '';
+
+            const balances = {};
+            userAccounts.forEach(acc => { balances[acc.id] = Number(acc.initialBalance) || 0; });
+            allTransactions.forEach(tx => {
+                const amt = Number(tx.amount) || 0;
+                if (balances[tx.accountId] !== undefined) {
+                    if (tx.type === 'add') balances[tx.accountId] += amt; else balances[tx.accountId] -= amt;
+                }
+            });
+
+            if (userAccounts.length === 0) {
+                accDiv.innerHTML = '<div class="col-span-2 bg-white border border-dashed border-gray-200 p-4 rounded-xl text-center text-xs font-bold text-gray-400">No accounts created.</div>';
+            } else {
+                userAccounts.forEach(acc => {
+                    const currentBal = Number(balances[acc.id]) || 0;
+                    const balColor = currentBal < 0 ? 'text-red-500' : 'text-slate-800';
+                    accDiv.innerHTML += `
+                        <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
+                            <p class="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider truncate">${acc.name}</p>
+                            <p class="text-lg font-extrabold ${balColor} mt-1 truncate">RS ${currentBal.toFixed(2)}</p>
+                        </div>
+                    `;
+                });
+            }
+
+            if (!allTransactions || allTransactions.length === 0) {
+                histDiv.innerHTML = '<li class="bg-white border border-dashed border-gray-200 p-6 rounded-xl text-center text-xs font-bold text-gray-400 uppercase tracking-widest">No Records Found</li>';
+            } else {
+                allTransactions.forEach(tx => {
+                    const accRef = userAccounts.find(a => a.id === tx.accountId);
+                    const accName = accRef ? accRef.name : 'Unknown Account';
+                    const isIncome = tx.type === 'add';
+                    const amountValue = Number(tx.amount) || 0;
+                    const amountText = isIncome ? `+ RS ${amountValue.toFixed(2)}` : `- RS ${amountValue.toFixed(2)}`;
+                    const colorClass = isIncome ? 'text-prasatek-primary' : 'text-red-500';
+
+                    histDiv.innerHTML += `
+                        <li class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                            <div class="flex-1 overflow-hidden pr-3">
+                                <p class="font-bold text-slate-800 text-sm truncate">${tx.description || 'Transaction'}</p>
+                                <p class="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-wide">
+                                    <span class="text-slate-500">${accName}</span> • ${tx.date || ''}
+                                </p>
+                            </div>
+                            <span class="font-extrabold ${colorClass} text-sm whitespace-nowrap">${amountText}</span>
+                        </li>
+                    `;
+                });
+            }
+        }
+
+        const openAddUserBtn = document.getElementById('openAddUserBtn');
+        openAddUserBtn.addEventListener('click', () => {
+            document.getElementById('addUserModal').classList.remove('hidden');
+            document.getElementById('addUserModal').classList.add('flex');
+        });
+
+        document.getElementById('closeAddUser').addEventListener('click', () => {
+            document.getElementById('addUserForm').reset();
+            document.getElementById('addUserModal').classList.add('hidden');
+            document.getElementById('addUserModal').classList.remove('flex');
+        });
+
+        document.getElementById('addUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const uid = document.getElementById('addUid').value.trim();
+            const email = document.getElementById('addEmail').value.trim();
+            const displayName = document.getElementById('addDisplayName').value.trim();
+            const mobile = document.getElementById('addMobile').value.trim();
+
+            if (!uid) return alert('UID is required');
+
+            const docRef = db.collection('users').doc(uid);
+
+            try {
+                await docRef.set({ 
+                    uid, 
+                    email, 
+                    displayName, 
+                    mobile, 
+                    role: 'user',
+                    lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                
+                alert('User profile manually created/updated');
+                document.getElementById('addUserForm').reset();
+                document.getElementById('addUserModal').classList.add('hidden');
+                document.getElementById('addUserModal').classList.remove('flex');
+                loadUsers();
+            } catch (err) {
+                console.error('Failed to save user doc:', err);
+                alert('Failed to save user: ' + (err.message || err));
+            }
+        });
 
         async function loadUserDetails(user) {
             document.getElementById('emptyDetailState').classList.add('hidden');
             document.getElementById('userDetailView').classList.remove('hidden');
             document.getElementById('userDetailView').classList.add('flex');
 
-            document.getElementById('detailAvatar').textContent = (user.displayName || user.email || '?').charAt(0).toUpperCase();
-            document.getElementById('detailName').textContent = user.displayName || 'Unnamed User';
-            document.getElementById('detailEmail').textContent = user.email;
-            document.getElementById('detailMobile').textContent = user.mobile || 'Not Provided';
+            const uid = user.uid || user.id;
+            const userName = user.displayName || 'Unnamed User';
+            const userEmail = user.email || 'No email';
+            const mobileValue = user.mobile || 'Not Provided';
+
+            document.getElementById('detailAvatar').textContent = userName.charAt(0).toUpperCase();
+            document.getElementById('detailName').textContent = userName;
+            document.getElementById('detailEmail').textContent = userEmail;
+            document.getElementById('detailMobile').textContent = mobileValue;
             
-            const dateStr = user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown';
+            const dateValue = user.lastLoginAt || user.createdAt;
+            const dateStr = dateValue?.toDate
+                ? dateValue.toDate().toLocaleDateString()
+                : (typeof dateValue === 'number' ? new Date(dateValue).toLocaleDateString() : 'Unknown');
             document.getElementById('detailDate').textContent = dateStr;
 
             const accDiv = document.getElementById('detailAccounts');
@@ -178,71 +369,38 @@
             histDiv.innerHTML = '';
 
             try {
-                // Fetch Accounts
-                const accSnap = await db.collection("accounts").where("userId", "==", user.uid).get();
+                if (!uid) throw new Error('User ID missing');
+
+                if (adminUsersWithAccounts && adminUsersWithAccounts.length) {
+                    const cached = adminUsersWithAccounts.find(x => (x.uid || x.id) === uid);
+                    if (cached && cached.accounts) {
+                        renderAccountsAndHistory(cached.accounts, []);
+                        return;
+                    }
+                }
+
+                const accSnap = await db.collection("accounts").where("userId", "==", uid).get();
                 let userAccounts = [];
                 let accountBalances = {};
                 accSnap.forEach(doc => {
                     const data = { id: doc.id, ...doc.data() };
                     userAccounts.push(data);
-                    accountBalances[data.id] = data.initialBalance;
+                    accountBalances[data.id] = Number(data.initialBalance) || 0;
                 });
 
-                // Fetch Transactions
-                const txSnap = await db.collection("transactions").where("userId", "==", user.uid).get();
+                const txSnap = await db.collection("transactions").where("userId", "==", uid).get();
                 let allTransactions = [];
                 txSnap.forEach(doc => {
                     const t = { id: doc.id, ...doc.data() };
                     allTransactions.push(t);
                     if (accountBalances[t.accountId] !== undefined) {
-                        if (t.type === 'add') accountBalances[t.accountId] += t.amount;
-                        else accountBalances[t.accountId] -= t.amount;
+                        if (t.type === 'add') accountBalances[t.accountId] += Number(t.amount) || 0;
+                        else accountBalances[t.accountId] -= Number(t.amount) || 0;
                     }
                 });
-                
+
                 allTransactions.sort((a, b) => b.timestamp - a.timestamp);
-
-                // Render Accounts
-                accDiv.innerHTML = '';
-                if (userAccounts.length === 0) {
-                    accDiv.innerHTML = '<div class="col-span-2 bg-white border border-dashed border-gray-200 p-4 rounded-xl text-center text-xs font-bold text-gray-400">No accounts created.</div>';
-                } else {
-                    userAccounts.forEach(acc => {
-                        const currentBal = accountBalances[acc.id];
-                        const balColor = currentBal < 0 ? 'text-red-500' : 'text-slate-800';
-                        accDiv.innerHTML += `
-                            <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
-                                <p class="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider truncate">${acc.name}</p>
-                                <p class="text-lg font-extrabold ${balColor} mt-1 truncate">RS ${currentBal.toFixed(2)}</p>
-                            </div>
-                        `;
-                    });
-                }
-
-                // Render History
-                if (allTransactions.length === 0) {
-                    histDiv.innerHTML = '<li class="bg-white border border-dashed border-gray-200 p-6 rounded-xl text-center text-xs font-bold text-gray-400 uppercase tracking-widest">No Records Found</li>';
-                } else {
-                    allTransactions.forEach(tx => {
-                        const accRef = userAccounts.find(a => a.id === tx.accountId);
-                        const accName = accRef ? accRef.name : 'Unknown Account';
-                        const isIncome = tx.type === 'add';
-                        const amountText = isIncome ? `+ RS ${tx.amount.toFixed(2)}` : `- RS ${tx.amount.toFixed(2)}`;
-                        const colorClass = isIncome ? 'text-prasatek-primary' : 'text-red-500';
-
-                        histDiv.innerHTML += `
-                            <li class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                                <div class="flex-1 overflow-hidden pr-3">
-                                    <p class="font-bold text-slate-800 text-sm truncate">${tx.description}</p>
-                                    <p class="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-wide">
-                                        <span class="text-slate-500">${accName}</span> • ${tx.date}
-                                    </p>
-                                </div>
-                                <span class="font-extrabold ${colorClass} text-sm whitespace-nowrap">${amountText}</span>
-                            </li>
-                        `;
-                    });
-                }
+                renderAccountsAndHistory(userAccounts, allTransactions);
 
             } catch (error) {
                 console.error("Error fetching user details:", error);
