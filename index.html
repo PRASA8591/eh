@@ -37,6 +37,24 @@
             <p class="text-sm font-bold text-gray-500 uppercase tracking-widest">Loading...</p>
         </div>
 
+        <div id="mobilePromptScreen" class="hidden flex-1 flex-col items-center justify-center p-8 overflow-y-auto hide-scroll w-full transition-opacity duration-150">
+            <div class="w-16 h-16 bg-prasatek-light rounded-full flex items-center justify-center text-prasatek-primary mb-4">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-900 mb-2">Complete Profile</h2>
+            <p class="text-sm text-gray-500 mb-8 text-center font-medium">Please link a mobile number to your Google account to secure your system data.</p>
+            
+            <form id="mobilePromptForm" class="w-full space-y-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Mobile Number</label>
+                    <input type="tel" id="newMobileInput" required placeholder="071XXXXXXX" class="w-full bg-prasatek-light text-slate-800 text-sm font-semibold rounded-xl px-4 py-3 border-none focus:ring-2 focus:ring-prasatek-primary outline-none transition">
+                </div>
+                <button type="submit" class="w-full bg-prasatek-primary hover:bg-[#09734a] text-white font-bold rounded-xl py-3.5 transition flex justify-center items-center gap-2 shadow-lg shadow-green-900/20 mt-4">
+                    <span>Save & Continue</span>
+                </button>
+            </form>
+        </div>
+
         <div id="authScreen" class="hidden flex-1 flex-col items-center justify-center p-8 overflow-y-auto hide-scroll w-full transition-opacity duration-150">
             
             <div class="text-center mb-6">
@@ -68,8 +86,8 @@
                     <input type="password" id="passwordInput" required placeholder="••••••••" class="w-full bg-prasatek-light text-slate-800 text-sm font-bold rounded-xl px-4 py-3 border-none focus:ring-2 focus:ring-prasatek-primary outline-none transition tracking-widest">
                 </div>
                 
-                <p id="authError" class="text-red-500 text-xs text-center hidden font-medium"></p>
-                <p id="authSuccess" class="text-prasatek-primary text-xs text-center hidden font-medium"></p>
+                <p id="authError" class="text-red-500 text-xs text-center hidden font-medium bg-red-50 p-2 rounded-lg border border-red-100"></p>
+                <p id="authSuccess" class="text-prasatek-primary text-xs text-center hidden font-medium bg-green-50 p-2 rounded-lg border border-green-100"></p>
 
                 <button type="submit" id="authSubmitBtn" class="w-full bg-prasatek-primary hover:bg-[#09734a] text-white font-bold rounded-xl py-3.5 transition flex justify-center items-center gap-2 shadow-lg shadow-green-900/20 mt-2">
                     <span>LOGIN</span>
@@ -138,7 +156,7 @@
                     <h3 class="font-bold text-slate-800">2. Disclaimer</h3>
                     <p>The materials are provided on an 'as is' basis. Prasatek System Solutions makes no warranties.</p>
                     <h3 class="font-bold text-slate-800">3. Currency</h3>
-                    <p>All financial metrics are calculated and processed in Sri Lankan Rupees (Rs).</p>
+                    <p>All financial metrics are calculated and processed in Sri Lankan Rupees (RS).</p>
                 </div>
             </div>
         </div>
@@ -345,13 +363,13 @@
 
     <script>
         const firebaseConfig = {
-            apiKey: "AIzaSyA7dv-PMi_4nnwpjnSEgiJPF15jGQz_Ygo",
-            authDomain: "expenses-c3712.firebaseapp.com",
-            projectId: "expenses-c3712",
-            storageBucket: "expenses-c3712.firebasestorage.app",
-            messagingSenderId: "225723251952",
-            appId: "1:225723251952:web:ae224e1131004e418e1635",
-            measurementId: "G-Q4FKC8TFSK"
+            apiKey: "AIzaSyAndmai3Gm7kYE6Tezdsam6UcGK6a7iNsY",
+            authDomain: "expenses-2-b78b3.firebaseapp.com",
+            projectId: "expenses-2-b78b3",
+            storageBucket: "expenses-2-b78b3.firebasestorage.app",
+            messagingSenderId: "40902555112",
+            appId: "1:40902555112:web:ed9a173015898c21f3205d",
+            measurementId: "G-BEWFG1WZF7"
         };
 
         firebase.initializeApp(firebaseConfig);
@@ -359,7 +377,12 @@
         const db = firebase.firestore();
         const googleProvider = new firebase.auth.GoogleAuthProvider();
 
+        // STRICT TAB ISOLATION (SESSION)
+        // This ensures opening a new tab forces a fresh login screen.
+        auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch((error) => console.warn(error));
+
         let currentUser = null;
+        let pendingUserForDashboard = null; // Used temporarily for mobile prompt screen
         let userAccounts = [];
         let allTransactions = [];
         let expenseChartInstance = null; 
@@ -368,6 +391,7 @@
 
         const screens = {
             auth: document.getElementById('authScreen'),
+            mobilePromptScreen: document.getElementById('mobilePromptScreen'),
             main: document.getElementById('mainScreen'),
             privacyScreen: document.getElementById('privacyScreen'),
             termsScreen: document.getElementById('termsScreen'),
@@ -391,6 +415,102 @@
         const filterDate = document.getElementById('filterDate');
         const filterAccount = document.getElementById('filterAccount');
 
+        // ================= FIRESTORE SYNC =================
+        async function syncUserToFirestore(user, additionalData = {}) {
+            const userRef = db.collection('users').doc(user.uid);
+            
+            const payload = {
+                uid: user.uid,
+                email: user.email || '',
+                photoURL: user.photoURL || '',
+                lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            if (user.displayName) payload.displayName = user.displayName;
+            if (additionalData.displayName) payload.displayName = additionalData.displayName;
+            if (additionalData.mobile) payload.mobile = additionalData.mobile;
+            
+            if (user.email === 'admin@prasatek.site') payload.role = 'admin';
+
+            try {
+                await userRef.set(payload, { merge: true });
+            } catch (error) {
+                console.error("Firestore Write Blocked:", error);
+                throw new Error("Database Permission Denied.");
+            }
+        }
+
+        // ================= DASHBOARD RENDER =================
+        function loadDashboard(user) {
+            currentUser = user;
+            document.getElementById('userNameDisplay').textContent = user.displayName || user.email.split('@')[0] || "User";
+            document.getElementById('userProfilePic').src = user.photoURL || "https://ui-avatars.com/api/?name=" + (user.displayName || "A") + "&background=0b8c5a&color=fff";
+            showScreen('main');
+            fetchData();
+        }
+
+        // ================= LOGIN HANDLER =================
+        async function handleLoginSuccess(user, additionalData = {}) {
+            showScreen('loading');
+            try {
+                await syncUserToFirestore(user, additionalData);
+                
+                // 1. Route Admins immediately
+                if (user.email === 'admin@prasatek.site') {
+                    window.location.href = 'admin.html';
+                    return;
+                }
+                
+                // 2. Enforce Email Verification (Natively via secure link)
+                const isPasswordLogin = user.providerData.some(p => p.providerId === 'password');
+                if (!user.emailVerified && isPasswordLogin) {
+                    await auth.signOut();
+                    throw new Error("Please click the secure verification link sent to your email before logging in.");
+                }
+                
+                // 3. Enforce Mobile Collection for Google Logins
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                const userData = userDoc.data();
+                
+                if (!userData.mobile || userData.mobile.trim() === '') {
+                    pendingUserForDashboard = user;
+                    showScreen('mobilePromptScreen');
+                    return; // Stop the flow here, wait for form submission
+                }
+                
+                // 4. Success -> Build Dashboard
+                loadDashboard(user);
+
+            } catch (err) {
+                await auth.signOut();
+                authError.textContent = err.message;
+                authError.classList.remove('hidden');
+                showScreen('auth');
+            }
+        }
+
+        // Handle Mobile Prompt Submission
+        document.getElementById('mobilePromptForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newMobile = document.getElementById('newMobileInput').value.trim();
+            if(!newMobile || !pendingUserForDashboard) return;
+
+            const btn = e.target.querySelector('button');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = "<span>Saving...</span>";
+
+            try {
+                await syncUserToFirestore(pendingUserForDashboard, { mobile: newMobile });
+                loadDashboard(pendingUserForDashboard);
+                pendingUserForDashboard = null; // clear memory
+            } catch (err) {
+                alert("Failed to save mobile number. Please try again.");
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        });
+
         const today = new Date();
         dateInput.value = today.toISOString().split('T')[0];
         filterMonth.value = today.toISOString().slice(0, 7);
@@ -408,7 +528,6 @@
                 loadingScreen.classList.add('flex');
                 return;
             }
-
             if(screens[target]) {
                 screens[target].classList.remove('hidden');
                 screens[target].classList.add('flex');
@@ -418,11 +537,7 @@
         }
 
         function goBack() {
-            if (currentUser) {
-                showScreen('main');
-            } else {
-                showScreen('auth');
-            }
+            if (currentUser) showScreen('main'); else showScreen('auth');
         }
 
         const confirmModal = document.getElementById('confirmModal');
@@ -448,7 +563,7 @@
             confirmActionCallback = null;
         });
 
-        // ================= AUTH LOGIC =================
+        // ================= AUTH EVENTS =================
         toggleAuthBtn.addEventListener('click', () => {
             isLoginMode = !isLoginMode;
             authError.classList.add('hidden');
@@ -486,99 +601,70 @@
             authError.classList.add('hidden');
             authSuccess.classList.add('hidden');
             authSubmitBtn.disabled = true;
+            authSubmitBtn.innerHTML = "<span>Processing...</span>";
 
             try {
                 if (isLoginMode) {
                     const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                    const user = userCredential.user;
-                    
-                    // Admin routing and bypass verification check
-                    if (user.email === 'admin@prasatek.site') {
-                        window.location.href = 'admin.html';
-                        return;
-                    }
-
-                    if (!user.emailVerified) {
-                        await auth.signOut();
-                        throw new Error("Please verify your email address before logging in. Check your inbox.");
-                    }
+                    await handleLoginSuccess(userCredential.user);
                 } else {
                     const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                     const user = userCredential.user;
                     
                     await user.updateProfile({ displayName: name });
                     
-                    // Save to users collection
-                    await db.collection("users").doc(user.uid).set({
-                        uid: user.uid,
-                        email: email,
-                        displayName: name,
-                        mobile: mobile,
-                        createdAt: Date.now()
-                    });
+                    // Pre-fill their profile so they don't get the mobile prompt later
+                    await syncUserToFirestore(user, { displayName: name, mobile: mobile });
 
+                    // Send the native secure verification link
                     await user.sendEmailVerification();
                     await auth.signOut();
                     
-                    authSuccess.textContent = "Registration successful! A verification email has been sent. Please confirm before logging in.";
+                    authSuccess.textContent = "Registration successful! A secure verification link has been sent to your email.";
                     authSuccess.classList.remove('hidden');
                     document.getElementById('authForm').reset();
-                    toggleAuthBtn.click(); // switch to login mode
+                    toggleAuthBtn.click(); 
                 }
             } catch (error) {
                 authError.textContent = error.message;
                 authError.classList.remove('hidden');
             }
             authSubmitBtn.disabled = false;
+            authSubmitBtn.innerHTML = isLoginMode ? `<span>LOGIN</span>` : `<span>REGISTER</span>`;
         });
 
         document.getElementById('googleLoginBtn').addEventListener('click', async () => {
             authError.classList.add('hidden');
+            const btn = document.getElementById('googleLoginBtn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = "Signing in...";
+            
             try {
                 const result = await auth.signInWithPopup(googleProvider);
-                const user = result.user;
-                if (user.email === 'admin@prasatek.site') {
-                    window.location.href = 'admin.html';
-                    return;
-                }
-                
-                // For Google, email is usually verified automatically, but ensure user doc exists
-                const userDoc = await db.collection("users").doc(user.uid).get();
-                if (!userDoc.exists) {
-                    await db.collection("users").doc(user.uid).set({
-                        uid: user.uid, email: user.email, displayName: user.displayName, mobile: "", createdAt: Date.now()
-                    });
-                }
+                await handleLoginSuccess(result.user);
             } catch (error) {
                 authError.textContent = error.message;
                 authError.classList.remove('hidden');
             }
+            btn.innerHTML = originalHTML;
         });
 
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                if (user.email === 'admin@prasatek.site') {
-                    window.location.href = 'admin.html';
-                    return;
+        // Initial Auth State Load
+        let initialLoad = true;
+        auth.onAuthStateChanged(async (user) => {
+            if (initialLoad) {
+                initialLoad = false;
+                if (user) {
+                    await handleLoginSuccess(user);
+                } else {
+                    showScreen('auth');
                 }
-                if (!user.emailVerified) {
-                    auth.signOut();
-                    return; // Prevent logic load if unverified
-                }
-                
-                currentUser = user;
-                document.getElementById('userNameDisplay').textContent = user.displayName || user.email.split('@')[0] || "User";
-                document.getElementById('userProfilePic').src = user.photoURL || "https://ui-avatars.com/api/?name=" + (user.displayName || "A") + "&background=0b8c5a&color=fff";
-                
-                showScreen('main');
-                fetchData();
-            } else {
-                currentUser = null;
-                showScreen('auth');
             }
         });
 
-        document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut());
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            auth.signOut().then(() => window.location.reload());
+        });
 
         // ================= APP LOGIC =================
         async function fetchData() {
@@ -773,7 +859,7 @@
                     fetchData(); 
                 } catch (error) {
                     const errUi = document.getElementById('modalError');
-                    errUi.textContent = "Error saving. Please check your Firebase Rules."; errUi.classList.remove('hidden');
+                    errUi.textContent = "Error saving. Check Firebase Rules."; errUi.classList.remove('hidden');
                 } finally { btn.textContent = "Save Account"; btn.disabled = false; }
             }
         });
