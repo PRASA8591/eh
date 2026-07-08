@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | Expense Tracker Pro</title>
+    <title>Enterprise Admin Dashboard | Prasatek</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="favicon.png">
     
@@ -18,6 +18,14 @@
         .bg-prasatek-dark { background-color: #1e293b; }
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .tab-active { border-bottom: 2px solid #0b8c5a; color: #0b8c5a; font-weight: 800; }
+        .tab-inactive { color: #64748b; font-weight: 600; }
+        .tab-inactive:hover { color: #334155; }
+        
+        /* Toggle Switch CSS */
+        .toggle-checkbox:checked { right: 0; border-color: #0b8c5a; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #0b8c5a; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen font-sans antialiased text-slate-800">
@@ -26,102 +34,247 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-prasatek-primary flex items-center justify-center text-white font-bold">PT</div>
-                    <span class="font-extrabold text-xl tracking-tight">Admin<span class="text-prasatek-primary">Panel</span></span>
+                    <div class="w-8 h-8 rounded-lg bg-prasatek-dark flex items-center justify-center text-white font-bold shadow-md">PT</div>
+                    <span class="font-extrabold text-xl tracking-tight">Admin<span class="text-prasatek-primary">Enterprise</span></span>
                 </div>
+                
+                <!-- Expanded Enterprise Tab Navigation -->
+                <div class="hidden md:flex items-center space-x-8 pt-1">
+                    <button id="tabDashboard" class="tab-inactive h-full px-1 py-4 text-sm transition-colors focus:outline-none" onclick="switchTab('dashboard')">System Dashboard</button>
+                    <button id="tabUsers" class="tab-active h-full px-1 py-4 text-sm transition-colors focus:outline-none" onclick="switchTab('users')">User Management</button>
+                    <button id="tabOrgs" class="tab-inactive h-full px-1 py-4 text-sm transition-colors focus:outline-none" onclick="switchTab('orgs')">Organizations</button>
+                    <button id="tabSettings" class="tab-inactive h-full px-1 py-4 text-sm transition-colors focus:outline-none" onclick="switchTab('settings')">Global Settings</button>
+                </div>
+
                 <div class="flex items-center gap-4">
-                    <span class="text-sm font-bold text-slate-500 hidden sm:block">admin@prasatek.site</span>
-                    <button id="logoutBtn" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg text-sm font-bold transition">Logout</button>
+                    <span class="text-sm font-bold text-slate-500 hidden sm:block" id="adminEmailDisplay">admin@prasatek.site</span>
+                    <button id="logoutBtn" class="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg text-sm font-bold transition">Secure Logout</button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row gap-8 relative">
-        
-        <div id="loadingOverlay" class="absolute inset-0 bg-gray-50/90 z-40 flex flex-col items-center justify-center min-h-[500px]">
-            <div class="w-10 h-10 border-4 border-prasatek-light border-t-prasatek-primary rounded-full animate-spin mb-4"></div>
-            <p class="text-sm font-bold text-gray-500 uppercase tracking-widest">Verifying Admin Access...</p>
+    <div id="loadingOverlay" class="fixed inset-0 bg-gray-50/90 z-[60] flex flex-col items-center justify-center">
+        <div class="w-10 h-10 border-4 border-prasatek-light border-t-prasatek-primary rounded-full animate-spin mb-4"></div>
+        <p class="text-sm font-bold text-gray-500 uppercase tracking-widest">Authenticating Admin...</p>
+    </div>
+
+    <!-- 1. System Analytics Dashboard View -->
+    <main id="viewDashboard" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden flex-col gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center items-center">
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Total System Users</p>
+                <h3 class="text-4xl font-extrabold text-slate-800" id="statTotalUsers">0</h3>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center items-center">
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Active Managers/Admins</p>
+                <h3 class="text-4xl font-extrabold text-prasatek-primary" id="statPrivilegedUsers">0</h3>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center items-center">
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Suspended Accounts</p>
+                <h3 class="text-4xl font-extrabold text-red-500" id="statSuspendedUsers">0</h3>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center items-center">
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Registered Branches</p>
+                <h3 class="text-4xl font-extrabold text-blue-500" id="statTotalOrgs">0</h3>
+            </div>
         </div>
 
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide mb-4">Recent System Logins</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-600">
+                    <thead class="text-xs text-gray-400 uppercase bg-gray-50 font-bold">
+                        <tr>
+                            <th class="px-4 py-3 rounded-l-lg">User</th>
+                            <th class="px-4 py-3">Email</th>
+                            <th class="px-4 py-3">Role</th>
+                            <th class="px-4 py-3 rounded-r-lg">Last Login</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentLoginsTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- 2. User Management View -->
+    <main id="viewUsers" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row gap-8 relative">
         <div class="w-full md:w-1/3 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[80vh]">
             <div class="p-5 border-b border-gray-100">
-                <h2 class="text-lg font-extrabold text-slate-800">Registered Users</h2>
-                <p class="text-xs font-bold text-gray-400 mt-1 uppercase tracking-wide" id="totalUsersCount">0 Users</p>
-                <p class="text-xs text-gray-400 mt-1" id="dataSource">Source: unknown</p>
-                <div class="mt-3">
-                    <button id="openAddUserBtn" class="text-xs bg-prasatek-primary text-white px-3 py-1 rounded-lg">Add User</button>
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h2 class="text-lg font-extrabold text-slate-800">System Users</h2>
+                        <p class="text-xs font-bold text-gray-400 mt-1 uppercase tracking-wide" id="totalUsersCount">0 Users</p>
+                    </div>
+                    <button id="openAddUserBtn" class="text-xs bg-prasatek-primary hover:bg-[#09734a] transition text-white px-3 py-1.5 rounded-lg shadow-sm font-bold flex items-center gap-1">
+                        + Add User
+                    </button>
+                </div>
+                
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <input type="text" id="searchUsersInput" placeholder="Search by name, email, or UID..." class="w-full bg-prasatek-light text-slate-800 text-xs font-bold rounded-xl pl-9 pr-4 py-2.5 border-none outline-none focus:ring-1 focus:ring-prasatek-primary transition">
                 </div>
             </div>
-            <div class="flex-1 overflow-y-auto hide-scroll p-3 space-y-2" id="userListContainer">
-                </div>
+            
+            <div class="flex-1 overflow-y-auto hide-scroll p-3 space-y-2" id="userListContainer"></div>
         </div>
 
         <div class="w-full md:w-2/3 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[80vh] overflow-hidden">
-            
             <div id="emptyDetailState" class="flex-1 flex flex-col items-center justify-center text-gray-400">
                 <svg class="w-16 h-16 mb-4 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                <p class="font-bold text-sm">Select a user to view details</p>
+                <p class="font-bold text-sm">Select a user to view enterprise details</p>
             </div>
 
             <div id="userDetailView" class="hidden flex-col h-full">
                 <div class="p-6 border-b border-gray-100 bg-prasatek-light">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-prasatek-primary rounded-full flex items-center justify-center text-white font-bold text-xl" id="detailAvatar">U</div>
-                        <div>
-                            <h2 class="text-xl font-extrabold text-slate-900" id="detailName">User Name</h2>
-                            <p class="text-sm font-bold text-slate-500" id="detailEmail">user@email.com</p>
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-prasatek-dark rounded-full flex items-center justify-center text-white font-bold text-xl relative" id="detailAvatar">
+                                U
+                                <div id="statusDot" class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-prasatek-light rounded-full"></div>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-extrabold text-slate-900" id="detailName">User Name</h2>
+                                <p class="text-sm font-bold text-slate-500" id="detailEmail">user@email.com</p>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase mt-1">UID: <span id="detailUid" class="text-gray-500">---</span></p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col gap-2 items-end">
+                            <div class="flex items-center gap-2">
+                                <label class="text-[9px] font-bold text-gray-500 uppercase">Access Role:</label>
+                                <select id="userRoleSelect" class="bg-white border border-gray-200 text-xs font-bold rounded-lg px-2 py-1 outline-none text-slate-700 cursor-pointer">
+                                    <option value="user">Standard User</option>
+                                    <option value="manager">Branch Manager</option>
+                                    <option value="admin">System Admin</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label class="text-[9px] font-bold text-gray-500 uppercase">Acc Status:</label>
+                                <select id="userStatusSelect" class="bg-white border border-gray-200 text-xs font-bold rounded-lg px-2 py-1 outline-none text-slate-700 cursor-pointer">
+                                    <option value="active" class="text-green-600 font-bold">Active</option>
+                                    <option value="suspended" class="text-red-500 font-bold">Suspended</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
+                    
                     <div class="grid grid-cols-2 gap-4 mt-6">
                         <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                            <p class="text-[10px] font-bold text-gray-400 uppercase">Mobile Number</p>
-                            <p class="font-bold text-slate-800" id="detailMobile">N/A</p>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase">Contact / Domain</p>
+                            <p class="font-bold text-slate-800" id="detailMobile">0719323239</p>
                         </div>
-                        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                            <p class="text-[10px] font-bold text-gray-400 uppercase">Joined</p>
-                            <p class="font-bold text-slate-800" id="detailDate">N/A</p>
+                        <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex justify-between items-center">
+                            <div>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase">Tenant Organization</p>
+                                <select id="userOrgSelect" class="font-bold text-slate-800 bg-transparent outline-none border-none p-0 cursor-pointer text-sm w-full">
+                                    <option value="default">Default Pool</option>
+                                    <option value="central-pepiliyana">Central Stores - Pepiliyana</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="flex-1 overflow-y-auto hide-scroll p-6 bg-gray-50">
-                    <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide mb-4">Accounts & Balances</h3>
-                    <div class="grid grid-cols-2 gap-3 mb-8" id="detailAccounts">
-                        </div>
+                    <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide mb-4">Financial Overview (Base Currency: RS)</h3>
+                    <div class="grid grid-cols-2 gap-3 mb-8" id="detailAccounts"></div>
 
-                    <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide mb-4">Recent History (All Accounts)</h3>
-                    <ul class="space-y-3" id="detailHistory">
-                        </ul>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide">Audit Log (Transactions)</h3>
+                        <button id="exportUserAuditBtn" class="bg-prasatek-dark text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-slate-700 transition flex items-center gap-1 shadow-sm">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Export Audit CSV
+                        </button>
+                    </div>
+                    <ul class="space-y-3 pb-4" id="detailHistory"></ul>
                 </div>
             </div>
-
         </div>
     </main>
 
-    <div id="addUserModal" class="hidden fixed inset-0 z-50 items-center justify-center bg-black bg-opacity-40">
-        <div class="bg-white rounded-lg p-6 w-full max-w-md mx-auto">
-            <h3 class="text-lg font-extrabold mb-3">Add Firestore User</h3>
-            <form id="addUserForm" class="space-y-3">
+    <!-- 3. NEW FEATURE: Multi-Tenant Organizations View -->
+    <main id="viewOrgs" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden flex-col gap-6">
+        <div class="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div>
+                <h2 class="text-xl font-extrabold text-slate-800">Branch & Location Management</h2>
+                <p class="text-sm font-medium text-gray-500 mt-1">Manage sub-tenants and regional organizations.</p>
+            </div>
+            <button class="bg-prasatek-primary hover:bg-[#09734a] text-white px-4 py-2 rounded-xl shadow-sm font-bold flex items-center gap-2 transition">
+                + Register Branch
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="orgListContainer">
+            <!-- Populated via JS, includes Central Stores placeholder based on user data history -->
+        </div>
+    </main>
+
+    <!-- 4. NEW FEATURE: Global Settings View -->
+    <main id="viewSettings" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden flex-col gap-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <h2 class="text-xl font-extrabold text-slate-800 mb-6">Global System Configurations</h2>
+            
+            <div class="space-y-6">
+                <!-- Security Settings -->
+                <div class="pb-6 border-b border-gray-100">
+                    <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide mb-4">Security Policies</h3>
+                    <div class="flex items-center justify-between bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <div>
+                            <p class="font-bold text-slate-800 text-sm">Enforce Biometric Authentication System-wide</p>
+                            <p class="text-xs text-gray-500 mt-1">Requires all users to verify identity via fingerprint or FaceID before session access. Disables standard password fallbacks.</p>
+                        </div>
+                        <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+                            <input type="checkbox" name="toggle" id="biometricToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer transition-all duration-300 z-10"/>
+                            <label for="biometricToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer transition-all duration-300"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Localization Settings -->
+                <div class="pb-6 border-b border-gray-100">
+                    <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide mb-4">Localization & Currency</h3>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase">Base System Currency</label>
+                            <select class="w-full bg-prasatek-light text-slate-800 text-sm font-bold rounded-xl px-4 py-3 border-none outline-none appearance-none cursor-not-allowed opacity-70" disabled>
+                                <option value="RS">Sri Lankan Rupee (RS)</option>
+                            </select>
+                            <p class="text-[10px] text-gray-400 mt-1 italic">Hard-locked to RS for reporting compliance.</p>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase">Timezone</label>
+                            <select class="w-full bg-prasatek-light text-slate-800 text-sm font-bold rounded-xl px-4 py-3 border-none outline-none">
+                                <option>Asia/Colombo (GMT+5:30)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add User Modal -->
+    <div id="addUserModal" class="hidden fixed inset-0 z-50 items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-[1.5rem] p-7 w-full max-w-md mx-auto shadow-2xl">
+            <h3 class="text-2xl font-extrabold text-slate-800 mb-1">Add Manual User</h3>
+            <p class="text-sm text-gray-500 mb-6 font-medium">Create a user record directly in Firestore.</p>
+            <form id="addUserForm" class="space-y-4">
                 <div>
-                    <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase">UID</label>
-                    <input id="addUid" type="text" required class="w-full bg-prasatek-light text-slate-800 text-sm font-semibold rounded-xl px-4 py-3 border-none outline-none">
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5">User UID</label>
+                    <input id="addUid" type="text" required placeholder="Generated or custom UID" class="w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-1 focus:ring-prasatek-primary">
                 </div>
                 <div>
-                    <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase">Email</label>
-                    <input id="addEmail" type="email" class="w-full bg-prasatek-light text-slate-800 text-sm font-semibold rounded-xl px-4 py-3 border-none outline-none">
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5">Email Address</label>
+                    <input id="addEmail" type="email" placeholder="user@company.com" class="w-full border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-1 focus:ring-prasatek-primary">
                 </div>
-                <div>
-                    <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase">Display Name</label>
-                    <input id="addDisplayName" type="text" class="w-full bg-prasatek-light text-slate-800 text-sm font-semibold rounded-xl px-4 py-3 border-none outline-none">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase">Mobile</label>
-                    <input id="addMobile" type="tel" class="w-full bg-prasatek-light text-slate-800 text-sm font-semibold rounded-xl px-4 py-3 border-none outline-none">
-                </div>
-                <div class="flex gap-3 justify-end pt-3">
-                    <button type="button" id="closeAddUser" class="bg-[#e2e8f0] hover:bg-gray-300 text-slate-700 font-bold py-2 px-4 rounded-xl">Cancel</button>
-                    <button type="submit" id="saveAddUser" class="bg-prasatek-primary hover:bg-[#09734a] text-white font-bold py-2 px-4 rounded-xl">Save User</button>
+                <div class="flex gap-3 pt-4">
+                    <button type="button" id="closeAddUser" class="w-1/2 bg-[#e2e8f0] text-slate-600 font-bold py-3 rounded-xl hover:bg-gray-300 transition">Cancel</button>
+                    <button type="submit" id="saveAddUser" class="w-1/2 bg-prasatek-primary hover:bg-[#09734a] transition text-white font-bold py-3 rounded-xl shadow-lg">Save User</button>
                 </div>
             </form>
         </div>
@@ -134,279 +287,320 @@
             projectId: "expenses-2-b78b3",
             storageBucket: "expenses-2-b78b3.firebasestorage.app",
             messagingSenderId: "40902555112",
-            appId: "1:40902555112:web:ed9a173015898c21f3205d",
-            measurementId: "G-BEWFG1WZF7"
+            appId: "1:40902555112:web:ed9a173015898c21f3205d"
         };
-
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // STRICT TAB ISOLATION (SESSION)
-        auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch((error) => console.warn(error));
+        let activeAdminViewUserId = null;
+        let allGlobalUsers = []; 
+        let currentUserAuditLog = []; 
 
-        let adminUsersWithAccounts = []; 
+        // Enterprise Multi-Tenant Placeholder Data
+        const organizations = [
+            { id: 'default', name: 'Default Main Pool', location: 'HQ', users: 0 },
+            { id: 'central-pepiliyana', name: 'Central Stores - Pepiliyana', location: 'Pepiliyana', users: 0 }
+        ];
+
+        // Expanded Tab Navigation Logic
+        function switchTab(tabName) {
+            const tabs = ['dashboard', 'users', 'orgs', 'settings'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                const view = document.getElementById(`view${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                if(t === tabName) {
+                    btn.className = 'tab-active h-full px-1 py-4 text-sm transition-colors focus:outline-none';
+                    view.classList.remove('hidden'); view.classList.add('flex');
+                } else {
+                    btn.className = 'tab-inactive h-full px-1 py-4 text-sm transition-colors focus:outline-none';
+                    view.classList.remove('flex'); view.classList.add('hidden');
+                }
+            });
+            if(tabName === 'dashboard') renderDashboardStats();
+            if(tabName === 'orgs') renderOrganizations();
+        }
 
         auth.onAuthStateChanged(user => {
-            if (user) {
-                if (user.email !== 'admin@prasatek.site') {
-                    auth.signOut().then(() => window.location.href = 'index.html');
-                } else {
-                    document.getElementById('loadingOverlay').classList.add('hidden');
-                    loadUsers();
-                }
+            if (user && user.email === 'admin@prasatek.site') {
+                document.getElementById('adminEmailDisplay').textContent = user.email;
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                loadUsers();
             } else {
                 window.location.href = 'index.html';
             }
         });
 
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            auth.signOut().then(() => window.location.href = 'index.html');
-        });
+        document.getElementById('logoutBtn').addEventListener('click', () => auth.signOut().then(() => window.location.href = 'index.html'));
 
-        async function loadUsers() {
-            const container = document.getElementById('userListContainer');
-            container.innerHTML = '';
-
-            try {
-                const usersSnap = await db.collection('users').get();
-                const userDocs = [];
-                usersSnap.forEach(doc => userDocs.push({ id: doc.id, ...doc.data() }));
-
-                userDocs.sort((a, b) => {
-                    const aTime = a.lastLoginAt?.toDate ? a.lastLoginAt.toDate().getTime() : 0;
-                    const bTime = b.lastLoginAt?.toDate ? b.lastLoginAt.toDate().getTime() : 0;
-                    return bTime - aTime;
-                });
-
-                const visibleUsers = userDocs.filter(u => u.email !== 'admin@prasatek.site');
-                adminUsersWithAccounts = visibleUsers;
-                document.getElementById('totalUsersCount').textContent = `${visibleUsers.length} Users`;
-                document.getElementById('dataSource').textContent = 'Source: Firestore users collection';
-
-                if (!visibleUsers.length) {
-                    const accAll = await db.collection('accounts').get();
-                    const byUser = {};
-                    accAll.forEach(doc => {
-                        const d = doc.data();
-                        const uid = d.userId || d.uid;
-                        if (!uid) return;
-                        if (!byUser[uid]) byUser[uid] = [];
-                        byUser[uid].push({ id: doc.id, ...d });
-                    });
-
-                    const derived = Object.keys(byUser).map(uid => ({ uid, displayName: '', email: '', accounts: byUser[uid] }));
-                    if (derived.length) {
-                        adminUsersWithAccounts = derived;
-                        document.getElementById('totalUsersCount').textContent = `${derived.length} Users`;
-                        document.getElementById('dataSource').textContent = 'Source: derived from accounts collection';
-                        derived.forEach(u => {
-                            const initial = (u.displayName || u.email || u.uid || '?').charAt(0).toUpperCase();
-                            const card = document.createElement('div');
-                            card.className = "flex items-center gap-3 p-3 rounded-xl hover:bg-prasatek-light cursor-pointer transition border border-transparent hover:border-gray-200";
-                            card.onclick = () => loadUserDetails(u);
-                            card.innerHTML = `
-                                <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600 shrink-0">${initial}</div>
-                                <div class="flex-1 overflow-hidden">
-                                    <p class="font-bold text-slate-800 text-sm truncate">${u.displayName || u.uid}</p>
-                                    <p class="text-xs text-gray-500 truncate">${u.email || 'No email'}</p>
-                                </div>
-                            `;
-                            container.appendChild(card);
-                        });
-                        return;
-                    }
-
-                    container.innerHTML = '<div class="p-6 text-center text-xs font-bold text-gray-400">No synced users found yet. Ensure users have logged in since the fix.</div>';
-                    return;
-                }
-
-                visibleUsers.forEach(u => {
-                    const initial = (u.displayName || u.email || u.uid || '?').charAt(0).toUpperCase();
-                    const card = document.createElement('div');
-                    card.className = "flex items-center gap-3 p-3 rounded-xl hover:bg-prasatek-light cursor-pointer transition border border-transparent hover:border-gray-200";
-                    card.onclick = () => loadUserDetails(u);
-                    card.innerHTML = `
-                        <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600 shrink-0">${initial}</div>
-                        <div class="flex-1 overflow-hidden">
-                            <p class="font-bold text-slate-800 text-sm truncate">${u.displayName || 'Unnamed User'}</p>
-                            <p class="text-xs text-gray-500 truncate">${u.email || 'No email'}</p>
-                        </div>
-                    `;
-                    container.appendChild(card);
-                });
-            } catch (error) {
-                console.error("Error fetching users:", error);
-                alert("Failed to load users from Database. Ensure Firestore rules allow Admin read access.");
-            }
-        }
-
-        function renderAccountsAndHistory(userAccounts, allTransactions) {
-            const accDiv = document.getElementById('detailAccounts');
-            const histDiv = document.getElementById('detailHistory');
-            accDiv.innerHTML = '';
-            histDiv.innerHTML = '';
-
-            const balances = {};
-            userAccounts.forEach(acc => { balances[acc.id] = Number(acc.initialBalance) || 0; });
-            allTransactions.forEach(tx => {
-                const amt = Number(tx.amount) || 0;
-                if (balances[tx.accountId] !== undefined) {
-                    if (tx.type === 'add') balances[tx.accountId] += amt; else balances[tx.accountId] -= amt;
-                }
-            });
-
-            if (userAccounts.length === 0) {
-                accDiv.innerHTML = '<div class="col-span-2 bg-white border border-dashed border-gray-200 p-4 rounded-xl text-center text-xs font-bold text-gray-400">No accounts created.</div>';
-            } else {
-                userAccounts.forEach(acc => {
-                    const currentBal = Number(balances[acc.id]) || 0;
-                    const balColor = currentBal < 0 ? 'text-red-500' : 'text-slate-800';
-                    accDiv.innerHTML += `
-                        <div class="bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
-                            <p class="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider truncate">${acc.name}</p>
-                            <p class="text-lg font-extrabold ${balColor} mt-1 truncate">RS ${currentBal.toFixed(2)}</p>
-                        </div>
-                    `;
-                });
-            }
-
-            if (!allTransactions || allTransactions.length === 0) {
-                histDiv.innerHTML = '<li class="bg-white border border-dashed border-gray-200 p-6 rounded-xl text-center text-xs font-bold text-gray-400 uppercase tracking-widest">No Records Found</li>';
-            } else {
-                allTransactions.forEach(tx => {
-                    const accRef = userAccounts.find(a => a.id === tx.accountId);
-                    const accName = accRef ? accRef.name : 'Unknown Account';
-                    const isIncome = tx.type === 'add';
-                    const amountValue = Number(tx.amount) || 0;
-                    const amountText = isIncome ? `+ RS ${amountValue.toFixed(2)}` : `- RS ${amountValue.toFixed(2)}`;
-                    const colorClass = isIncome ? 'text-prasatek-primary' : 'text-red-500';
-
-                    histDiv.innerHTML += `
-                        <li class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                            <div class="flex-1 overflow-hidden pr-3">
-                                <p class="font-bold text-slate-800 text-sm truncate">${tx.description || 'Transaction'}</p>
-                                <p class="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-wide">
-                                    <span class="text-slate-500">${accName}</span> • ${tx.date || ''}
-                                </p>
-                            </div>
-                            <span class="font-extrabold ${colorClass} text-sm whitespace-nowrap">${amountText}</span>
-                        </li>
-                    `;
-                });
-            }
-        }
-
-        const openAddUserBtn = document.getElementById('openAddUserBtn');
-        openAddUserBtn.addEventListener('click', () => {
-            document.getElementById('addUserModal').classList.remove('hidden');
-            document.getElementById('addUserModal').classList.add('flex');
-        });
-
-        document.getElementById('closeAddUser').addEventListener('click', () => {
-            document.getElementById('addUserForm').reset();
-            document.getElementById('addUserModal').classList.add('hidden');
-            document.getElementById('addUserModal').classList.remove('flex');
-        });
-
+        // Modals
+        document.getElementById('openAddUserBtn').addEventListener('click', () => document.getElementById('addUserModal').classList.replace('hidden', 'flex'));
+        document.getElementById('closeAddUser').addEventListener('click', () => { document.getElementById('addUserForm').reset(); document.getElementById('addUserModal').classList.replace('flex', 'hidden'); });
+        
         document.getElementById('addUserForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const uid = document.getElementById('addUid').value.trim();
             const email = document.getElementById('addEmail').value.trim();
-            const displayName = document.getElementById('addDisplayName').value.trim();
-            const mobile = document.getElementById('addMobile').value.trim();
-
-            if (!uid) return alert('UID is required');
-
-            const docRef = db.collection('users').doc(uid);
-
+            const btn = document.getElementById('saveAddUser');
+            btn.textContent = "Saving..."; btn.disabled = true;
             try {
-                await docRef.set({ 
-                    uid, 
-                    email, 
-                    displayName, 
-                    mobile, 
-                    role: 'user',
-                    lastLoginAt: firebase.firestore.FieldValue.serverTimestamp()
+                await db.collection('users').doc(uid).set({ 
+                    uid, email, role: 'user', status: 'active', org: 'default', lastLoginAt: firebase.firestore.FieldValue.serverTimestamp() 
                 }, { merge: true });
-                
-                alert('User profile manually created/updated');
-                document.getElementById('addUserForm').reset();
-                document.getElementById('addUserModal').classList.add('hidden');
-                document.getElementById('addUserModal').classList.remove('flex');
+                document.getElementById('closeAddUser').click();
                 loadUsers();
-            } catch (err) {
-                console.error('Failed to save user doc:', err);
-                alert('Failed to save user: ' + (err.message || err));
-            }
+            } catch(err) { alert("Error saving user."); } 
+            finally { btn.textContent = "Save User"; btn.disabled = false; }
         });
+
+        async function loadUsers() {
+            const container = document.getElementById('userListContainer');
+            container.innerHTML = '<p class="text-xs font-bold text-gray-400 text-center py-4">Fetching users...</p>';
+            try {
+                const usersSnap = await db.collection('users').get();
+                allGlobalUsers = [];
+                usersSnap.forEach(doc => allGlobalUsers.push({ id: doc.id, ...doc.data() }));
+                
+                allGlobalUsers.sort((a, b) => {
+                    const timeA = a.lastLoginAt?.toDate ? a.lastLoginAt.toDate().getTime() : 0;
+                    const timeB = b.lastLoginAt?.toDate ? b.lastLoginAt.toDate().getTime() : 0;
+                    return timeB - timeA;
+                });
+
+                document.getElementById('totalUsersCount').textContent = `${allGlobalUsers.length} Registered Users`;
+                renderUserList(allGlobalUsers);
+                renderDashboardStats(); 
+                
+            } catch (error) { container.innerHTML = '<p class="text-xs text-red-500 font-bold text-center py-4">Failed to load users.</p>'; }
+        }
+
+        document.getElementById('searchUsersInput').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = allGlobalUsers.filter(u => 
+                (u.displayName && u.displayName.toLowerCase().includes(term)) ||
+                (u.email && u.email.toLowerCase().includes(term)) ||
+                (u.uid && u.uid.toLowerCase().includes(term))
+            );
+            renderUserList(filtered);
+        });
+
+        function renderUserList(usersArray) {
+            const container = document.getElementById('userListContainer');
+            container.innerHTML = '';
+            if (usersArray.length === 0) { container.innerHTML = '<p class="text-xs font-bold text-gray-400 text-center py-4">No matching users found.</p>'; return; }
+
+            usersArray.forEach(u => {
+                const initial = (u.displayName || u.email || u.uid || '?').charAt(0).toUpperCase();
+                const isSuspended = u.status === 'suspended';
+                const opacityClass = isSuspended ? 'opacity-60 grayscale' : '';
+                
+                const card = document.createElement('div');
+                card.className = `flex items-center justify-between p-3 rounded-xl hover:bg-prasatek-light cursor-pointer transition border border-gray-100 shadow-sm bg-white ${opacityClass}`;
+                card.onclick = () => loadUserDetails(u);
+                
+                card.innerHTML = `
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600 shrink-0 relative">
+                            ${initial}
+                            ${isSuspended ? '<div class="absolute bottom-0 right-0 w-3 h-3 bg-red-500 border-2 border-white rounded-full"></div>' : ''}
+                        </div>
+                        <div class="flex-1 overflow-hidden">
+                            <p class="font-bold text-slate-800 text-sm truncate">${u.displayName || u.uid}</p>
+                            <p class="text-xs text-gray-500 truncate">${u.email || 'No email'}</p>
+                        </div>
+                    </div>
+                    ${u.role === 'admin' ? '<span class="text-[9px] font-extrabold bg-prasatek-dark text-white px-2 py-0.5 rounded-md uppercase tracking-wider shrink-0">Admin</span>' : ''}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderDashboardStats() {
+            document.getElementById('statTotalUsers').textContent = allGlobalUsers.length;
+            document.getElementById('statTotalOrgs').textContent = organizations.length;
+            
+            let privilegedCount = 0;
+            let suspendedCount = 0;
+            const recentTable = document.getElementById('recentLoginsTable');
+            recentTable.innerHTML = '';
+
+            // Reset org counts
+            organizations.forEach(o => o.users = 0);
+
+            allGlobalUsers.forEach((u, index) => {
+                if (u.role === 'admin' || u.role === 'manager') privilegedCount++;
+                if (u.status === 'suspended') suspendedCount++;
+                
+                const orgId = u.org || 'default';
+                const orgMatch = organizations.find(o => o.id === orgId);
+                if(orgMatch) orgMatch.users++;
+                
+                if (index < 5) {
+                    const dateStr = u.lastLoginAt?.toDate ? u.lastLoginAt.toDate().toLocaleString() : 'Unknown';
+                    const roleColor = u.role === 'admin' ? 'text-prasatek-primary' : 'text-slate-600';
+                    recentTable.innerHTML += `
+                        <tr class="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition">
+                            <td class="px-4 py-3 font-bold text-slate-800">${u.displayName || 'Unnamed'}</td>
+                            <td class="px-4 py-3">${u.email || 'N/A'}</td>
+                            <td class="px-4 py-3 font-bold uppercase text-[10px] ${roleColor}">${u.role || 'user'}</td>
+                            <td class="px-4 py-3 text-xs text-gray-500">${dateStr}</td>
+                        </tr>
+                    `;
+                }
+            });
+            
+            document.getElementById('statPrivilegedUsers').textContent = privilegedCount;
+            document.getElementById('statSuspendedUsers').textContent = suspendedCount;
+        }
+
+        function renderOrganizations() {
+            const container = document.getElementById('orgListContainer');
+            container.innerHTML = '';
+            organizations.forEach(org => {
+                container.innerHTML += `
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-extrabold text-slate-800 text-lg">${org.name}</h3>
+                            <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">Location: ${org.location}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-3xl font-extrabold text-prasatek-primary">${org.users}</p>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Assigned Users</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
 
         async function loadUserDetails(user) {
             document.getElementById('emptyDetailState').classList.add('hidden');
             document.getElementById('userDetailView').classList.remove('hidden');
             document.getElementById('userDetailView').classList.add('flex');
 
-            const uid = user.uid || user.id;
-            const userName = user.displayName || 'Unnamed User';
-            const userEmail = user.email || 'No email';
-            const mobileValue = user.mobile || 'Not Provided';
+            activeAdminViewUserId = user.uid || user.id;
 
-            document.getElementById('detailAvatar').textContent = userName.charAt(0).toUpperCase();
-            document.getElementById('detailName').textContent = userName;
-            document.getElementById('detailEmail').textContent = userEmail;
-            document.getElementById('detailMobile').textContent = mobileValue;
+            document.getElementById('detailAvatar').innerHTML = `
+                ${(user.displayName || user.email || 'U').charAt(0).toUpperCase()}
+                <div id="statusDot" class="absolute bottom-0 right-0 w-3.5 h-3.5 ${user.status === 'suspended' ? 'bg-red-500' : 'bg-green-500'} border-2 border-prasatek-light rounded-full"></div>
+            `;
+            document.getElementById('detailName').textContent = user.displayName || 'Unnamed User';
+            document.getElementById('detailEmail').textContent = user.email || 'No email provided';
+            document.getElementById('detailUid').textContent = activeAdminViewUserId;
+            document.getElementById('detailMobile').textContent = user.mobile || '0719323239'; 
             
-            const dateValue = user.lastLoginAt || user.createdAt;
-            const dateStr = dateValue?.toDate
-                ? dateValue.toDate().toLocaleDateString()
-                : (typeof dateValue === 'number' ? new Date(dateValue).toLocaleDateString() : 'Unknown');
-            document.getElementById('detailDate').textContent = dateStr;
+            const roleSelect = document.getElementById('userRoleSelect');
+            roleSelect.value = user.role || 'user';
+            roleSelect.onchange = async (e) => {
+                if(!activeAdminViewUserId) return;
+                try {
+                    await db.collection('users').doc(activeAdminViewUserId).update({ role: e.target.value });
+                    user.role = e.target.value; 
+                    renderDashboardStats(); 
+                } catch(err) { alert("Failed to update role."); roleSelect.value = user.role || 'user'; }
+            };
 
+            const statusSelect = document.getElementById('userStatusSelect');
+            statusSelect.value = user.status || 'active';
+            statusSelect.onchange = async (e) => {
+                if(!activeAdminViewUserId) return;
+                try {
+                    await db.collection('users').doc(activeAdminViewUserId).update({ status: e.target.value });
+                    user.status = e.target.value; 
+                    
+                    const dot = document.getElementById('statusDot');
+                    if(e.target.value === 'suspended') dot.classList.replace('bg-green-500', 'bg-red-500');
+                    else dot.classList.replace('bg-red-500', 'bg-green-500');
+                    
+                    renderUserList(allGlobalUsers); 
+                    renderDashboardStats(); 
+                } catch(err) { alert("Failed to update status."); statusSelect.value = user.status || 'active'; }
+            };
+
+            const orgSelect = document.getElementById('userOrgSelect');
+            orgSelect.value = user.org || 'default';
+            orgSelect.onchange = async (e) => {
+                if(!activeAdminViewUserId) return;
+                try {
+                    await db.collection('users').doc(activeAdminViewUserId).update({ org: e.target.value });
+                    user.org = e.target.value; 
+                    renderDashboardStats(); 
+                } catch(err) { alert("Failed to update organization."); orgSelect.value = user.org || 'default'; }
+            };
+            
             const accDiv = document.getElementById('detailAccounts');
             const histDiv = document.getElementById('detailHistory');
-            
-            accDiv.innerHTML = '<p class="text-xs font-bold text-gray-400 col-span-2">Loading data...</p>';
+            accDiv.innerHTML = '<p class="text-xs font-bold text-gray-400">Loading ledgers...</p>';
             histDiv.innerHTML = '';
+            currentUserAuditLog = []; 
 
             try {
-                if (!uid) throw new Error('User ID missing');
+                const accSnap = await db.collection("accounts").where("userId", "==", activeAdminViewUserId).get();
+                let userAccounts = []; let balances = {};
+                accSnap.forEach(doc => { 
+                    const d = doc.data(); 
+                    userAccounts.push({id: doc.id, ...d}); 
+                    balances[doc.id] = Number(d.initialBalance); 
+                });
 
-                if (adminUsersWithAccounts && adminUsersWithAccounts.length) {
-                    const cached = adminUsersWithAccounts.find(x => (x.uid || x.id) === uid);
-                    if (cached && cached.accounts) {
-                        renderAccountsAndHistory(cached.accounts, []);
-                        return;
+                const txSnap = await db.collection("transactions").where("userId", "==", activeAdminViewUserId).get();
+                txSnap.forEach(doc => {
+                    const t = doc.data(); 
+                    currentUserAuditLog.push(t);
+                    if(balances[t.accountId] !== undefined) {
+                        balances[t.accountId] += (t.type === 'add' ? t.amount : -t.amount);
                     }
+                });
+
+                accDiv.innerHTML = userAccounts.length ? '' : '<div class="col-span-2 text-center py-4 border-2 border-dashed border-gray-200 rounded-xl text-xs font-bold text-gray-400">No accounts created by user.</div>';
+                
+                userAccounts.forEach(acc => {
+                    const bal = balances[acc.id];
+                    accDiv.innerHTML += `
+                        <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm">
+                            <p class="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider truncate">${acc.name}</p>
+                            <p class="text-lg font-extrabold ${bal < 0 ? 'text-red-500' : 'text-slate-800'} mt-1 truncate">RS ${bal.toFixed(2)}</p>
+                        </div>`;
+                });
+
+                if (currentUserAuditLog.length === 0) {
+                    histDiv.innerHTML = '<li class="text-center py-6 text-xs font-bold text-gray-400 uppercase tracking-widest">No Transactions Logged</li>';
                 }
 
-                const accSnap = await db.collection("accounts").where("userId", "==", uid).get();
-                let userAccounts = [];
-                let accountBalances = {};
-                accSnap.forEach(doc => {
-                    const data = { id: doc.id, ...doc.data() };
-                    userAccounts.push(data);
-                    accountBalances[data.id] = Number(data.initialBalance) || 0;
+                currentUserAuditLog.sort((a, b) => b.timestamp - a.timestamp).forEach(tx => {
+                    const isInc = tx.type === 'add';
+                    const accName = userAccounts.find(a => a.id === tx.accountId)?.name || 'Unknown Acc';
+                    histDiv.innerHTML += `
+                        <li class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:border-gray-300 transition">
+                            <div class="flex-1 overflow-hidden pr-3">
+                                <p class="font-bold text-slate-800 text-sm truncate">${tx.description}</p>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase mt-0.5 tracking-wide">${tx.category || 'System'} • ${accName} • ${tx.date}</p>
+                            </div>
+                            <span class="font-extrabold ${isInc ? 'text-prasatek-primary' : 'text-red-500'} text-sm whitespace-nowrap">
+                                ${isInc ? '+' : '-'} RS ${tx.amount.toFixed(2)}
+                            </span>
+                        </li>`;
                 });
-
-                const txSnap = await db.collection("transactions").where("userId", "==", uid).get();
-                let allTransactions = [];
-                txSnap.forEach(doc => {
-                    const t = { id: doc.id, ...doc.data() };
-                    allTransactions.push(t);
-                    if (accountBalances[t.accountId] !== undefined) {
-                        if (t.type === 'add') accountBalances[t.accountId] += Number(t.amount) || 0;
-                        else accountBalances[t.accountId] -= Number(t.amount) || 0;
-                    }
-                });
-
-                allTransactions.sort((a, b) => b.timestamp - a.timestamp);
-                renderAccountsAndHistory(userAccounts, allTransactions);
-
-            } catch (error) {
-                console.error("Error fetching user details:", error);
-                accDiv.innerHTML = '<p class="text-xs text-red-500 font-bold col-span-2">Error loading user data.</p>';
+            } catch (error) { 
+                accDiv.innerHTML = '<p class="text-xs text-red-500 font-bold">Error loading user financial data.</p>'; 
             }
         }
+
+        document.getElementById('exportUserAuditBtn').addEventListener('click', () => {
+            if (currentUserAuditLog.length === 0) return alert("No transactions available to export for this user.");
+            let csvContent = "data:text/csv;charset=utf-8,Date,Type,Category,Description,Amount (RS)\n";
+            currentUserAuditLog.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(tx => {
+                const typeStr = tx.type === 'add' ? 'Income' : 'Expense';
+                const catStr = tx.category || 'N/A';
+                csvContent += `${tx.date},${typeStr},${catStr},"${tx.description.replace(/"/g, '""')}",${tx.amount.toFixed(2)}\n`;
+            });
+            const link = document.createElement("a");
+            link.href = encodeURI(csvContent);
+            link.download = `AuditLog_${activeAdminViewUserId}.csv`;
+            document.body.appendChild(link); 
+            link.click(); 
+            document.body.removeChild(link);
+        });
+
     </script>
 </body>
 </html>
