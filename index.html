@@ -122,7 +122,6 @@
                     </div>
                 </div>
                 
-                <!-- Added Policy links to Login Page -->
                 <div class="mt-8 flex justify-center gap-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-full">
                     <button onclick="showScreen('privacyScreen')" class="hover:text-prasatek-primary transition">Privacy</button>
                     <span>|</span>
@@ -200,7 +199,11 @@
                         </div>
                     </div>
                     <div class="flex md:hidden items-center gap-2">
-                        <!-- Added World Currencies for Mobile -->
+                        <!-- Mobile JSON Backup Button -->
+                        <button id="backupBtnMob" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 p-2 rounded-lg transition" title="Backup Full System (JSON)">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        </button>
+
                         <select id="currencySelectorMob" class="text-[10px] font-bold bg-gray-50 text-slate-700 rounded-lg px-2 py-1.5 outline-none border border-gray-200 cursor-pointer">
                             <option value="RS">RS</option>
                             <option value="USD">USD</option>
@@ -223,7 +226,12 @@
                 </div>
 
                 <div class="hidden md:flex items-center gap-3">
-                    <!-- Added World Currencies for Desktop -->
+                    <!-- Desktop JSON Backup Button -->
+                    <button id="backupBtnDesk" class="bg-indigo-50 text-xs font-bold text-indigo-600 hover:bg-indigo-100 px-3 py-2 rounded-lg transition flex items-center gap-1 shadow-sm">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Data Backup
+                    </button>
+
                     <select id="currencySelectorDesk" class="text-[11px] font-bold bg-gray-50 text-slate-700 rounded-lg px-3 py-2 outline-none border border-gray-200 cursor-pointer">
                         <option value="RS">LKR (RS)</option>
                         <option value="USD">USD ($)</option>
@@ -452,7 +460,6 @@
         let activeCurrency = 'RS';
         let customBudgetTargetBase = 50000; 
         
-        // Added World Currencies and Conversion Baseline
         const fxRates = { RS: 1, USD: 0.0033, EUR: 0.0031, GBP: 0.0026, JPY: 0.52, AUD: 0.0050, CAD: 0.0045, CHF: 0.0030, CNY: 0.024, INR: 0.27 };
         const fxSymbols = { RS: 'RS ', USD: '$', EUR: '€', GBP: '£', JPY: '¥', AUD: 'A$', CAD: 'C$', CHF: 'CHF ', CNY: '¥', INR: '₹' };
 
@@ -515,8 +522,6 @@
         }
         
         document.getElementById('dateInput').value = getLocalToday();
-        
-        // Auto-update to the current month to power the dynamic summary cards
         document.getElementById('filterMonth').value = getLocalToday().slice(0, 7); 
 
         function showScreen(target) {
@@ -662,7 +667,6 @@
             if (initialLoad) { initialLoad = false; if (user) await handleLoginSuccess(user); else showScreen('auth'); }
         });
 
-        // Sign Out with Secure Confirmation Check
         document.querySelectorAll('.logoutBtnAction').forEach(btn => {
             btn.addEventListener('click', () => {
                 showConfirmPopup("Sign Out", "Are you sure you want to securely sign out of your account?", () => {
@@ -849,6 +853,43 @@
                 document.getElementById(id).addEventListener('change', renderDashboard);
             }
         });
+
+        // FULL JSON SYSTEM BACKUP LOGIC
+        function exportBackupJSON() {
+            if (!currentUser) return alert("You must be logged in to backup data.");
+            if (userAccounts.length === 0 && allTransactions.length === 0) {
+                return alert("No data available to backup.");
+            }
+
+            const backupData = {
+                metadata: {
+                    appName: "ExpenseTracker Pro | Prasatek",
+                    exportDate: new Date().toISOString(),
+                    user: {
+                        uid: currentUser.uid,
+                        email: currentUser.email,
+                        displayName: currentUser.displayName || "Unknown User"
+                    }
+                },
+                accounts: userAccounts,
+                transactions: allTransactions
+            };
+
+            const jsonString = JSON.stringify(backupData, null, 2);
+            const blob = new Blob([jsonString], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Prasatek_Full_Backup_${getLocalToday()}.json`);
+            
+            document.body.appendChild(link); 
+            link.click(); 
+            document.body.removeChild(link);
+        }
+
+        document.getElementById('backupBtnDesk').addEventListener('click', exportBackupJSON);
+        document.getElementById('backupBtnMob').addEventListener('click', exportBackupJSON);
 
         document.getElementById('exportCsvBtn').addEventListener('click', () => {
             if (allTransactions.length === 0) return alert("No data available to export.");
